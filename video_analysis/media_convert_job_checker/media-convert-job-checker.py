@@ -4,8 +4,8 @@ from boto3 import client
 region = environ['AWS_REGION']
 
 # TODO
-# Handle job
-# Publish to SNS
+#   Handle job
+#   Publish to SNS
 
 def lambda_handler(event, context):
 
@@ -34,6 +34,9 @@ def lambda_handler(event, context):
     response["body"]["msg"] = "MediaConvert Job "+event["job_id"]+" status retreived"
     response["body"]["job_id"] = event["job_id"]
     response["body"]["job_response"] = job_response
+
+    # TODO
+    #   Process the frame files to add timestamp depending on frame rate
 
     return response
 

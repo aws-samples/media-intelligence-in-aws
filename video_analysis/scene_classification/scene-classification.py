@@ -2,14 +2,11 @@ from os import environ
 from boto3 import client
 
 region = environ['AWS_REGION']
-input = "s3://globo-dev/videos/analysis/360p-amor-de-m-e/"
 
 # TODO
-# Start Rekognition Handler
-# Create detect labels job
-# Handle job
-# Get results
-# Publish to SNS
+#   Handle job
+#   Get results
+#   Publish to SNS
 
 def lambda_handler(event, context):
 
@@ -40,7 +37,11 @@ def start_rekognition_label_job(s3_bucket):
     if rekognition_client is False:
         raise Exception("Rekognition client creation failed")
 
-    # Foreach jpg or png file in bucket
+    # TODO
+    #   Add S3 client
+    #   List objects
+    #   Foreach jpg or png file in bucket analyze it 
+
     try:
         job_response = rekognition_client.detect_labels(
             Image={

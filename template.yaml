@@ -11,8 +11,8 @@ Parameters:
   S3Bucket:
     Type: String
     Description: Your Amazon S3 bucket name
-    Default: "globo-ml-dpp"
-  MediaConvertDestinationBucket:
+    Default: "globo-data-copy"
+  DestinationBucket:
     Type: String
     Description: Amazon S3 bucket to bulk frames and audio outputs
     Default: "globo-dev"
@@ -53,28 +53,7 @@ Resources:
                   - s3:PutObject
                 Resource:
                   - !Sub "arn:aws:s3:::${S3Bucket}/*"
-  RekognitionS3Role:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - rekognition.amazonaws.com
-            Action:
-              - 'sts:AssumeRole'
-      Policies:
-        - PolicyName: RekognitiontS3RolePolicy
-          PolicyDocument:
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:GetObject
-                  - s3:PutObject
-                Resource:
-                  - !Sub "arn:aws:s3:::${S3Bucket}/*"
+                  - !Sub "arn:aws:s3:::${DestinationBucket}/*"
   LambdaMediaConvertRole:
     Type: AWS::IAM::Role
     Properties:
@@ -173,6 +152,7 @@ Resources:
                   - s3:PutObject
                 Resource:
                   - !Sub "arn:aws:s3:::${S3Bucket}/*"
+                  - !Sub "arn:aws:s3:::${DestinationBucket}/*"
               - Effect: Allow
                 Action:
                   - logs:CreateLogGroup
@@ -230,7 +210,7 @@ Resources:
       Environment:
         Variables:
           MEDIACONVERT_ROLE: !GetAtt MediaConvertS3Role.Arn
-          MEDIACONVERT_DESTINATION_BUCKET: !Ref MediaConvertDestinationBucket
+          MEDIACONVERT_DESTINATION_BUCKET: !Ref DestinationBucket
   MediaConvertJobChecker:
     Type: AWS::Serverless::Function
     Properties:

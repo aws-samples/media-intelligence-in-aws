@@ -2,4 +2,5 @@
 .aws-sam/
 samples/
 main.py
-lab_function.js
+y
+.DS_STORE
