@@ -40,7 +40,7 @@ def start_rekognition_label_job(s3_bucket):
     if rekognition_client is False:
         raise Exception("Rekognition client creation failed")
 
-
+    # Foreach jpg or png file in bucket
     try:
         job_response = rekognition_client.detect_labels(
             Image={

@@ -10,7 +10,6 @@ inputs = [
 ]
 
 # TODO
-# Handle job
 # Publish to SNS
 
 def lambda_handler(event, context):
