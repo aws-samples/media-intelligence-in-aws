@@ -12,6 +12,10 @@ Parameters:
     Type: String
     Description: Your Amazon S3 bucket name
     Default: "globo-ml-dpp"
+  MediaConvertDestinationBucket:
+    Type: String
+    Description: Amazon S3 bucket to bulk frames and audio outputs
+    Default: "globo-dev"
 
 Globals:
   Function:
@@ -41,6 +45,28 @@ Resources:
               - 'sts:AssumeRole'
       Policies:
         - PolicyName: MediaConvertS3RolePolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${S3Bucket}/*"
+  RekognitionS3Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - rekognition.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: RekognitiontS3RolePolicy
           PolicyDocument:
             Statement:
               - Effect: Allow
@@ -94,11 +120,66 @@ Resources:
                   - logs:PutLogEvents
                 Resource:
                   - arn:aws:logs:*:*:*:*
+  LambdaRekognitionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+      Policies:
+        - PolicyName: LambdaRekognitionPolicy
+          PolicyDocument:
+            Statement:
               - Effect: Allow
                 Action:
-                  - lambda:InvokeFunction
+                  - rekognition:DetectLabels
+                  - rekognition:CompareFaces
+                  - rekognition:DetectFaces
+                  - rekognition:ListCollections
+                  - rekognition:ListFaces
+                  - rekognition:SearchFaces
+                  - rekognition:SearchFacesByImage
+                  - rekognition:DetectText
+                  - rekognition:GetCelebrityInfo
+                  - rekognition:RecognizeCelebrities
+                  - rekognition:DetectModerationLabels
+                  - rekognition:GetLabelDetection
+                  - rekognition:GetFaceDetection
+                  - rekognition:GetContentModeration
+                  - rekognition:GetCelebrityRecognition
+                  - rekognition:GetFaceSearch
+                  - rekognition:GetTextDetection
+                  - rekognition:GetSegmentDetection
+                  - rekognition:DetectCustomLabels
                 Resource:
-                  - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*"
+                  - "*"
+              - Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource:
+                  - !GetAtt RekognitionS3Role.Arn
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${S3Bucket}/*"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - arn:aws:logs:*:*:*:*
   SimpleLambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -140,12 +221,25 @@ Resources:
   ####################
   # Lambda Functions #
   ####################
-  VideoProcessing:
+  AudioFrameExtractor:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: video_processing/
-      Handler: video-process.lambda_handler
-      Role: !GetAtt LambdaWorkflowRole.Arn
+      CodeUri: video_analysis/audio_frame_extraction/
+      Handler: audio-frame-extractor.lambda_handler
+      Role: !GetAtt LambdaMediaConvertRole.Arn
       Environment:
         Variables:
-          MEDIACONVERT_ROLE: !GetAtt LambdaMediaConvertRole.Arn
+          MEDIACONVERT_ROLE: !GetAtt MediaConvertS3Role.Arn
+          MEDIACONVERT_DESTINATION_BUCKET: !Ref MediaConvertDestinationBucket
+  MediaConvertJobChecker:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: video_analysis/media_convert_job_checker/
+      Handler: media-convert-job-checker.lambda_handler
+      Role: !GetAtt LambdaMediaConvertRole.Arn
+  SceneClassification:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: video_analysis/scene_classification/
+      Handler: scene-classification.lambda_handler
+      Role: !GetAtt LambdaRekognitionRole.Arn

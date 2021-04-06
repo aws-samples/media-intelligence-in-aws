@@ -1,3 +1,5 @@
 .idea/
+.aws-sam/
+samples/
 main.py
 lab_function.js

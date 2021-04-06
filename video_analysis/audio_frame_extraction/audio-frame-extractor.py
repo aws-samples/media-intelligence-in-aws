@@ -2,6 +2,7 @@ from os import environ
 from boto3 import client
 
 mediaconvert_role = environ['MEDIACONVERT_ROLE']
+destination_bucket = environ['MEDIACONVERT_DESTINATION_BUCKET']
 region = environ['AWS_REGION']
 inputs = [
     "s3://globo-ml-dpp/videos/360p-amor-de-m-e.mp4",
@@ -19,7 +20,7 @@ def lambda_handler(event, context):
             'Access-Control-Allow-Origin': '*'
         },
         'statusCode': 200,
-        'body': None
+        'body': {}
     }
 
     print("Processing the event: \n ",event)
@@ -93,6 +94,12 @@ def init_media_convert_client():
     return mediaconvert_client
 
 def build_media_convert_job_settings(s3_key,sample_rate = 1):
+
+    delimeter = '/'
+    destination_bucket_uri = "s3://"+destination_bucket+"/videos/analysis/"
+
+    file_name = (s3_key.split(delimeter)[-1])
+    file_name_no_extension = file_name.split('.')[-2]
 
     #Always a video required as an output for MediaConvert
     base_video_output = {
@@ -239,7 +246,7 @@ def build_media_convert_job_settings(s3_key,sample_rate = 1):
         "OutputGroupSettings": {
             "Type": "FILE_GROUP_SETTINGS",
             "FileGroupSettings": {
-                "Destination": ""
+                "Destination": destination_bucket_uri+file_name_no_extension+"/"
             }
         }
     }
@@ -273,35 +280,21 @@ def build_media_convert_job_settings(s3_key,sample_rate = 1):
 
     return base_settings
 
-def process_key_value_args(object,args):
-    print("Original object \n",object)
 
-    if(type(args) is not dict):
-        print("Only dictionary parameters are allowed")
-        return object
-
-    for key,value in args.items():
-        if(type(value) is dict):
-            object[key] = process_key_value_args(object[key],value)
-        else:
-            object[key] = value
-
-    return object
-
-def convert_float_to_fraction(number,decimal_separator = '.'):
-    numerator = number
+def convert_float_to_fraction(number, decimal_separator='.'):
     denominator = 1
 
     if (type(number) is float):
         if (float(number).is_integer() is False):
             number = str(number)
-            decimal_point =  number.find(decimal_separator)
-            if(decimal_separator != -1):
-                denominator = pow(10,(len(number)-1-decimal_point))
-                numerator = int(number.replace(decimal_separator,''))
+            decimal_point = number.find(decimal_separator)
+            if (decimal_separator != -1):
+                denominator = int(pow(10, (len(number) - 1 - decimal_point)))
+                numerator = int(number.replace(decimal_separator, ''))
         else:
             numerator = int(number)
+    else:
+        numerator = int(number)
 
-    return numerator,denominator
-
+    return numerator, denominator
 
