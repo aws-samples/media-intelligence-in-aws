@@ -4,7 +4,7 @@ from boto3 import client
 region = environ['AWS_REGION']
 
 # TODO
-#   Save to DynamoDB
+#   Publish to SNS
 
 def lambda_handler(event, context):
 
@@ -24,14 +24,13 @@ def lambda_handler(event, context):
         return response
 
     # List bucket objects
-    response['body'] = start_rekognition_label_job(event['frames_bucket'],event['frames_folder'])
+    response['body'] = start_analysis(event['video_bucket'],event['videos_prefix'])
 
 
     return response
 
-def start_rekognition_label_job(s3_bucket,analysis_path,min_confidence=70,name_identifier="_frame_"):
+def start_analysis(s3_bucket,analysis_path):
     s3_client = init_boto3_client('s3')
-    rekognition_client = init_boto3_client('rekognition')
 
     if s3_client is False:
         raise Exception("S3 client creation failed")
@@ -47,25 +46,17 @@ def start_rekognition_label_job(s3_bucket,analysis_path,min_confidence=70,name_i
         print("No frames found on " + analysis_path + " on bucket " + s3_bucket + ", verify your MediaConvert job, only jpg and png files supported")
         return {"msg": "No frames found verify your MediaConvert job, only jpg and png files supported"}
 
-    if rekognition_client is False:
-        raise Exception("Rekognition client creation failed")
 
 
     # TODO
-    #   Store the results somewhere
+    #   List s3 objects (videos only)
+    #   Invoke MediaConvert Frame extractor
+    #   Invoke MediaConvert Job Checker
+    #   Invoke Rekognition Label
     analysis_results = []
     for file_name in object_name_list:
         try:
-            job_response = rekognition_client.detect_labels(
-                Image={
-                    'S3Object': {
-                        'Bucket': s3_bucket,
-                        'Name': file_name
-                    }
-                },
-                MaxLabels=10,
-                MinConfidence=min_confidence
-            )
+            job_response = {}
         except Exception as e:
             print("Rekognition job creation exception on file: "+file_name+" \n", e)
             return {"msg": "Rekognition job creation exception, review logs for more information"}

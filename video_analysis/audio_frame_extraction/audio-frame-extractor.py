@@ -4,13 +4,9 @@ from boto3 import client
 mediaconvert_role = environ['MEDIACONVERT_ROLE']
 destination_bucket = environ['MEDIACONVERT_DESTINATION_BUCKET']
 region = environ['AWS_REGION']
-inputs = [
-    "s3://globo-ml-dpp/videos/360p-amor-de-m-e.mp4",
-    "s3://globo-ml-dpp/videos/amor-de-m-e-_-thelma-sequestra-lurdes.mp4"
-]
 
 # TODO
-# Publish to SNS
+#   Write to DynamoDB Table
 
 def lambda_handler(event, context):
 
@@ -38,6 +34,15 @@ def lambda_handler(event, context):
 
     response["body"]["msg"] = "MediaConvert Job succesfully created"
     response["body"]["job_id"] = job_id
+
+    file_name = (event["file_path"].split(delimeter)[-1])
+    file_name_no_extension = file_name.split('.')[-2]
+
+    write_to_dynamodb = write_video_record_dynamodb(file_name_no_extension,job_id)
+    if write_to_dynamodb is not False:
+        response['body']['dynamodb_write'] = True
+    else:
+        response['body']['dynamodb_write'] = False
 
     return response
 
@@ -195,7 +200,7 @@ def build_media_convert_job_settings(s3_key,sample_rate = 1):
                     "FramerateNumerator": sample_rate_numerator,
                     "FramerateDenominator": sample_rate_denominator,
                     "MaxCaptures": 10000000,
-                    "Quality": 80
+                    "Quality": 100
                 }
             },
             "DropFrameTimecode": "ENABLED",
@@ -297,3 +302,31 @@ def convert_float_to_fraction(number, decimal_separator='.'):
 
     return numerator, denominator
 
+def write_video_record_dynamodb(video_name,job_id):
+    dynamodb_client = init_boto3_client("dynamodb")
+    if dynamodb_client is False:
+        raise Exception("MediaConvert client creation failed")
+    try:
+        dynamo_response = dynamodb_client.put_item(
+            TableName=environ['DYNAMODB_TABLE_NAME'],
+            Item={
+                "video_name":video_name,
+                "mediaconvert_job_id": job_id,
+                "scene_detection_result":{}
+            }
+        )
+    except Exception as e:
+        print("Exception while writing item to DynamoDB \n",e)
+        return False
+
+    return True
+
+
+def init_boto3_client(client_type="s3"):
+    try:
+        custom_client = client(client_type, region_name=region)
+    except Exception as e:
+        print("An error occurred while initializing "+client_type.capitalize()+"Client \n", e)
+        return False
+
+    return custom_client

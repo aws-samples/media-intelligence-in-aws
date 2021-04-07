@@ -16,6 +16,10 @@ Parameters:
     Type: String
     Description: Amazon S3 bucket to bulk frames and audio outputs
     Default: "globo-dev"
+  DynamoDBTable:
+    Type: String
+    Description: DynamoDB Table to store results
+    Default: "globo-dpp"
 
 Globals:
   Function:
@@ -25,7 +29,9 @@ Globals:
     MemorySize: 1024
     Environment:
       Variables:
-        S3_BUCKET: !Ref S3Bucket
+        INPUT_BUCKET: !Ref S3Bucket
+        RESULTS_BUCKET: !Ref DestinationBucket
+        DYNAMODB_TABLE_NAME: !Ref DynamoDBTable
 
 Resources:
   #############
@@ -180,7 +186,7 @@ Resources:
                   - s3:PutObject
                 Resource:
                   - !Sub "arn:aws:s3:::${S3Bucket}/*"
-                  - !Sub "arn:aws:s3:::${S3Bucket}/*"
+                  - !Sub "arn:aws:s3:::${DestinationBucket}/*"
               - Effect: Allow
                 Action:
                   - logs:CreateLogGroup
@@ -218,3 +224,70 @@ Resources:
       CodeUri: video_analysis/scene_classification/
       Handler: scene-classification.lambda_handler
       Role: !GetAtt LambdaRekognitionRole.Arn
+
+  ####################
+  #    SNS Topics    #
+  ####################
+  MediaConvertTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint:
+            !GetAtt MediaConvertJobChecker.Arn
+          Protocol: "lambda"
+      TopicName: "MediaConvertJobStatus"
+  ################
+  # IAM Policies #
+  ################
+  EventTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sns:Publish
+            Resource: "*"
+      Topics:
+        - !Ref MediaConvertTopic
+  ####################
+  #    CloudWatch    #
+  ####################
+  MediaConvertJobEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+          - "aws.mediaconvert"
+        detail-type:
+          - "AWS Elemental MediaConvert job status changed"
+        detail:
+          status:
+            - "COMPLETE"
+            - "ERROR"
+      Targets:
+        -
+          Arn: !Ref MediaConvertTopic
+          Id: "MCJobsTopic"
+          InputTransformer:
+            InputPathsMap:
+              job_id: "$.detail.jobId"
+              status: "$.detail.status"
+            InputTemplate: "{'job_id':<job_id>,'status':<status>}"
+  ####################
+  #  DynamoDB Table  #
+  ####################
+  VideoAnalysisTable:
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: video_name
+          AttributeType: S
+      KeySchema:
+        - AttributeName: video_name
+          KeyType: HASH
+      TableName: !Ref DynamoDBTable

@@ -5,6 +5,7 @@ region = environ['AWS_REGION']
 
 # TODO
 #   Handle job
+#   Rename frames to use timestamp
 #   Publish to SNS
 
 def lambda_handler(event, context):
@@ -38,6 +39,7 @@ def lambda_handler(event, context):
     # TODO
     #   Process the frame files to add timestamp depending on frame rate
 
+
     return response
 
 def check_mediaconvert_job(job_id):
@@ -63,6 +65,11 @@ def check_mediaconvert_job(job_id):
                 "outputgroup_details": job_json['OutputGroupDetails'],
                 "output_bucket_path": job_json['Settings']['OutputGroups'][0]['OutputGroupSettings']['FileGroupSettings']['Destination']
             }
+            for output_group in job_json['Settings']['OutputGroups']:
+                if output_group['ContainerSettings']['Container'] == "RAW":
+                    numerator = output_group['VideoDescription']['CodecSettings']['FramerateNumerator']
+                    denominator = output_group['VideoDescription']['CodecSettings']['FramerateDenominator']
+                    job['sample_rate'] = numerator/denominator
         except Exception as e:
             print("Parsing Job Exception \n",e)
             return False
