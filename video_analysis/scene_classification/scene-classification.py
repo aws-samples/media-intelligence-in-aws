@@ -52,27 +52,31 @@ def start_rekognition_label_job(s3_bucket,analysis_path,min_confidence=0.7,name_
 
 
     # TODO
-    #  Foreach jpg or png file in bucket analyze it
     #   Store the results somewhere
+    analysis_results = []
     for file_name in object_name_list:
         try:
             job_response = rekognition_client.detect_labels(
                 Image={
                     'S3Object': {
                         'Bucket': s3_bucket,
-                        'Name': analysis_path+"/"+file_name
+                        'Name': file_name
                     }
                 },
-                MaxLabels=100,
+                MaxLabels=10,
                 MinConfidence=min_confidence
             )
         except Exception as e:
-            print("Rekognition job creation exception on file"+file_name+" \n", e)
+            print("Rekognition job creation exception on file: "+file_name+" \n", e)
             return {"msg": "Rekognition job creation exception, review logs for more information"}
         else:
-            print(job_response)
+            result_base = {
+                "file":file_name,
+                "rekognition_detect_labels_result":job_response
+            }
+            analysis_results.append(result_base.copy())
 
-    return {"msg": "Job completed for "+str(len(object_name_list))+" frames"}
+    return {"msg": "Job completed for "+str(len(object_name_list))+" frames","data":analysis_results}
 
 
 def validate_request_params(request):
