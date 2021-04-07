@@ -143,11 +143,6 @@ Resources:
                   - "*"
               - Effect: Allow
                 Action:
-                  - iam:PassRole
-                Resource:
-                  - !GetAtt RekognitionS3Role.Arn
-              - Effect: Allow
-                Action:
                   - s3:GetObject
                   - s3:PutObject
                 Resource:
