@@ -287,14 +287,14 @@ Resources:
   ####################
   #  DynamoDB Table  #
   ####################
-  VideoAnalysisTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      BillingMode: "PAY_PER_REQUEST"
-      AttributeDefinitions:
-        - AttributeName: uuid
-          AttributeType: S
-      KeySchema:
-        - AttributeName: uuid
-          KeyType: HASH
-      TableName: !Ref DynamoDBTable
+#  VideoAnalysisTable:
+#    Type: AWS::DynamoDB::Table
+#    Properties:
+#      BillingMode: "PAY_PER_REQUEST"
+#      AttributeDefinitions:
+#        - AttributeName: uuid
+#          AttributeType: S
+#      KeySchema:
+#        - AttributeName: uuid
+#          KeyType: HASH
+#      TableName: !Ref DynamoDBTable

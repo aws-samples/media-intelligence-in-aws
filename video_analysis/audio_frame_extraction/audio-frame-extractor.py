@@ -309,13 +309,13 @@ def write_video_record_dynamodb(video_name,job_id):
         raise Exception("MediaConvert client creation failed")
     try:
         uuid_string = str(uuid.uuid4())
-        dynamo_search_response = dynamodb_client.query(
-            TableName=environ['DYNAMODB_TABLE_NAME'],
-            IndexName="uuid",
-            Select='SPECIFIC_ATTRIBUTES',
-            AttributesToGet=['uuid'],
-            ConsistentRead=True,
-        )
+        # dynamo_search_response = dynamodb_client.query(
+        #     TableName=environ['DYNAMODB_TABLE_NAME'],
+        #     IndexName="uuid",
+        #     Select='SPECIFIC_ATTRIBUTES',
+        #     AttributesToGet=['uuid'],
+        #     ConsistentRead=True,
+        # )
         dynamo_response = dynamodb_client.put_item(
             TableName=environ['DYNAMODB_TABLE_NAME'],
             Item={
