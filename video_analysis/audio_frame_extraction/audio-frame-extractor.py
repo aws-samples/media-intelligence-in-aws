@@ -35,7 +35,7 @@ def lambda_handler(event, context):
     response["body"]["msg"] = "MediaConvert Job succesfully created"
     response["body"]["job_id"] = job_id
 
-    file_name = (event["file_path"].split(delimeter)[-1])
+    file_name = (event["file_path"].split('/')[-1])
     file_name_no_extension = file_name.split('.')[-2]
 
     write_to_dynamodb = write_video_record_dynamodb(file_name_no_extension,job_id)
@@ -310,8 +310,12 @@ def write_video_record_dynamodb(video_name,job_id):
         dynamo_response = dynamodb_client.put_item(
             TableName=environ['DYNAMODB_TABLE_NAME'],
             Item={
-                "video_name":video_name,
-                "mediaconvert_job_id": job_id,
+                "video_name": {
+                    "S":video_name
+                },
+                "mediaconvert_job_id": {
+                    "S":job_id
+                },
                 "scene_detection_result":{}
             }
         )
