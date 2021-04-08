@@ -291,3 +291,6 @@ Resources:
         - AttributeName: video_name
           KeyType: HASH
       TableName: !Ref DynamoDBTable
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
