@@ -38,7 +38,7 @@ def lambda_handler(event, context):
 
     # TODO
     #   Process the frame files to add timestamp depending on frame rate
-
+    rename_result = 0
 
     return response
 
@@ -104,5 +104,7 @@ def init_media_convert_client():
 
     return mediaconvert_client
 
-
+def rename_frames_to_timestamp(name_modifier="_frame_"):
+    # List frame objects, create pattern, update s3 files
+    return True
 
