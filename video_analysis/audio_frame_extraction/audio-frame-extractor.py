@@ -1,5 +1,6 @@
 from os import environ
 from boto3 import client
+import uuid
 
 mediaconvert_role = environ['MEDIACONVERT_ROLE']
 destination_bucket = environ['MEDIACONVERT_DESTINATION_BUCKET']
@@ -307,21 +308,33 @@ def write_video_record_dynamodb(video_name,job_id):
     if dynamodb_client is False:
         raise Exception("MediaConvert client creation failed")
     try:
+        uuid_string = str(uuid.uuid4())
+        dynamo_search_response = dynamodb_client.query(
+            TableName=environ['DYNAMODB_TABLE_NAME'],
+            IndexName="uuid",
+            Select='SPECIFIC_ATTRIBUTES',
+            AttributesToGet=['uuid'],
+            ConsistentRead=True,
+        )
         dynamo_response = dynamodb_client.put_item(
             TableName=environ['DYNAMODB_TABLE_NAME'],
             Item={
+                "uuid":{
+                    "S":uuid_string
+                },
                 "video_name": {
                     "S":video_name
                 },
                 "mediaconvert_job_id": {
                     "S":job_id
-                },
-                "scene_detection_result":{}
+                }
             }
         )
     except Exception as e:
         print("Exception while writing item to DynamoDB \n",e)
         return False
+    else:
+        assigned_uuid = ""
 
     return True
 

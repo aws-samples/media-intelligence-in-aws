@@ -12,3 +12,9 @@ exports.handler = function (event, context) {
     console.log(response);
     context.succeed(response);
 };
+/*
+* endpoint: { s3_path, analysis_list,sample_rate}
+* endpoint: {uuid, status_job, outputbucket}
+* endpoint: {uuid, status_for_each_analysis}
+* policies for each lambda
+* */
