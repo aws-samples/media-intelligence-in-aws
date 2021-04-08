@@ -28,7 +28,7 @@ def lambda_handler(event, context):
 
     sns_custom_payload = event['Records'][0]['Sns']['Message']
     print(sns_custom_payload)
-    sns_custom_payload_json = json.load(sns_custom_payload)
+    sns_custom_payload_json = json.loads(sns_custom_payload)
 
     job_response = check_mediaconvert_job(sns_custom_payload_json['job_id'])
 
