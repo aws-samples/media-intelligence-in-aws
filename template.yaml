@@ -285,18 +285,18 @@ Resources:
   ####################
   #  DynamoDB Table  #
   ####################
-  VideoAnalysisTable:
-    DeletionPolicy: Delete
-    UpdateReplacePolicy: Retain
-    Type: AWS::DynamoDB::Table
-    Properties:
-      AttributeDefinitions:
-        - AttributeName: video_name
-          AttributeType: S
-      KeySchema:
-        - AttributeName: video_name
-          KeyType: HASH
-      TableName: !Ref DynamoDBTable
-      ProvisionedThroughput:
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
+#  VideoAnalysisTable:
+#    DeletionPolicy: Delete
+#    UpdateReplacePolicy: Retain
+#    Type: AWS::DynamoDB::Table
+#    Properties:
+#      AttributeDefinitions:
+#        - AttributeName: video_name
+#          AttributeType: S
+#      KeySchema:
+#        - AttributeName: video_name
+#          KeyType: HASH
+#      TableName: !Ref DynamoDBTable
+#      ProvisionedThroughput:
+#        ReadCapacityUnits: 5
+#        WriteCapacityUnits: 5
