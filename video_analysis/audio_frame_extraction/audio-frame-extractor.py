@@ -311,8 +311,11 @@ def write_video_record_dynamodb(video_name,job_id):
         uuid_string = str(uuid.uuid4())
         # dynamo_search_response = dynamodb_client.query(
         #     TableName=environ['DYNAMODB_TABLE_NAME'],
-        #     IndexName="uuid",
-        #     Select='SPECIFIC_ATTRIBUTES',
+        #     Key={
+        #       "uuid":{
+        #          "S":uuid
+        #        }
+        #     },
         #     AttributesToGet=['uuid'],
         #     ConsistentRead=True,
         # )
@@ -327,6 +330,9 @@ def write_video_record_dynamodb(video_name,job_id):
                 },
                 "mediaconvert_job_id": {
                     "S":job_id
+                },
+                "mediaconvert_job_status": {
+                    "S":"STARTED"
                 }
             }
         )

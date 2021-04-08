@@ -1,5 +1,6 @@
 from os import environ
 from boto3 import client
+import json
 
 region = environ['AWS_REGION']
 
@@ -25,7 +26,11 @@ def lambda_handler(event, context):
         response["body"] = {"msg":"Missing parameters, please check your request"}
         return response
 
-    job_response = check_mediaconvert_job(event["job_id"])
+    sns_custom_payload = event['Records'][0]['Sns']['Message']
+    print(sns_custom_payload)
+    sns_custom_payload_json = json.load(sns_custom_payload)
+
+    job_response = check_mediaconvert_job(sns_custom_payload_json['job_id'])
 
     if(job_response is False):
         response["statusCode"] = 500
@@ -78,7 +83,7 @@ def check_mediaconvert_job(job_id):
 
 
 def validate_request_params(request):
-    if("job_id" not in request):
+    if("job_id" not in request['Records'][0]['Sns']['Message']):
         print("job_id not found on request \n")
         return False
 
@@ -108,3 +113,11 @@ def rename_frames_to_timestamp(name_modifier="_frame_"):
     # List frame objects, create pattern, update s3 files
     return True
 
+def init_boto3_client(client_type="s3"):
+    try:
+        custom_client = client(client_type, region_name=region)
+    except Exception as e:
+        print("An error occurred while initializing "+client_type.capitalize()+"Client \n", e)
+        return False
+
+    return custom_client
