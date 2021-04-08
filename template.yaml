@@ -282,7 +282,8 @@ Resources:
             InputPathsMap:
               job_id: "$.detail.jobId"
               status: "$.detail.status"
-            InputTemplate: "{'job_id': '<job_id>','status':'<status>'"
+            InputTemplate: |
+              "{'job_id': '<job_id>','status':'<status>'"
   ####################
   #  DynamoDB Table  #
   ####################
