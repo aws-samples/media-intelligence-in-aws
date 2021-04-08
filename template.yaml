@@ -105,6 +105,13 @@ Resources:
                   - logs:PutLogEvents
                 Resource:
                   - arn:aws:logs:*:*:*:*
+              - Effect: Allow
+                Action:
+                  - dynamodb:Get*
+                  - dynamodb:Query
+                  - dynamodb:Delete*
+                  - dynamodb:PutItem
+                Resource: !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
   LambdaRekognitionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -279,7 +286,7 @@ Resources:
   #  DynamoDB Table  #
   ####################
   VideoAnalysisTable:
-    DeletionPolicy: Retain
+    DeletionPolicy: Delete
     UpdateReplacePolicy: Retain
     Type: AWS::DynamoDB::Table
     Properties:
