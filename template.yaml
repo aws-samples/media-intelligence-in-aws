@@ -23,7 +23,7 @@ Parameters:
 
 Globals:
   Function:
-    Runtime: python3.7
+    Runtime: python3.8
     Handler: app.lambda_handler
     Timeout: 300
     MemorySize: 1024
@@ -271,11 +271,10 @@ Resources:
         -
           Arn: !Ref MediaConvertTopic
           Id: "MCJobsTopic"
-          InputTransformer:
-            InputPathsMap:
+          HttpParameters:
+            QueryStringParameters:
               job_id: "$.detail.jobId"
               status: "$.detail.status"
-            InputTemplate: "{'job_id':<job_id>,'status':<status>}"
   ####################
   #  DynamoDB Table  #
   ####################
