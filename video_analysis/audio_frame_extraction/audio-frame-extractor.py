@@ -1,7 +1,7 @@
 from os import environ
 from boto3 import client
 from json import dumps
-
+from time import time
 import uuid
 
 mediaconvert_role = environ['MEDIACONVERT_ROLE']
@@ -9,7 +9,7 @@ destination_bucket = environ['MEDIACONVERT_DESTINATION_BUCKET']
 region = environ['AWS_REGION']
 
 # TODO
-#   Write to DynamoDB Table
+
 
 def lambda_handler(event, context):
 
@@ -332,7 +332,7 @@ def write_video_record_dynamodb(video_name,job_id,sample_rate=1,video_analysis_l
                 "uuid":{
                     "S":uuid_string
                 },
-                "video_name": {
+                "file_name": {
                     "S":video_name
                 },
                 "mediaconvert_job_id": {
@@ -340,6 +340,9 @@ def write_video_record_dynamodb(video_name,job_id,sample_rate=1,video_analysis_l
                 },
                 "mediaconvert_job_status": {
                     "S":"STARTED"
+                },
+                "creation_timestamp": {
+                    "S": str(time())
                 },
                 "sample_rate":{
                     "N":str(sample_rate)

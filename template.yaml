@@ -323,14 +323,24 @@ Resources:
           AttributeType: S
         - AttributeName: mediaconvert_job_id
           AttributeType: S
+        - AttributeName: file_name
+          AttributeType: S
+        - AttributeName: creation_timestamp
+          AttributeType: S
       KeySchema:
         - AttributeName: uuid
           KeyType: HASH
+        - AttributeName: file_name
+          KeyType: RANGE
+        - AttributeName: creation_timestamp
+          KeyType: RANGE
       LocalSecondaryIndexes:
         - IndexName: MediaConvertJobIndex
           KeySchema:
-            - AttributeName: mediaconvert_job_id
+            - AttributeName: uuid
               KeyType: HASH
+            - AttributeName: mediaconvert_job_id
+              KeyType: RANGE
           Projection:
             ProjectionType: ALL
       TableName: !Ref DynamoDBTable
