@@ -332,14 +332,20 @@ Resources:
           KeyType: HASH
         - AttributeName: file_name
           KeyType: RANGE
-        - AttributeName: creation_timestamp
-          KeyType: RANGE
       LocalSecondaryIndexes:
         - IndexName: MediaConvertJobIndex
           KeySchema:
             - AttributeName: uuid
               KeyType: HASH
             - AttributeName: mediaconvert_job_id
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: TimeStampIndex
+          KeySchema:
+            - AttributeName: uuid
+              KeyType: HASH
+            - AttributeName: creation_timestamp
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
