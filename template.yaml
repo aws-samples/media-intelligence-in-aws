@@ -333,4 +333,4 @@ Resources:
               KeyType: HASH
           Projection:
             ProjectionType: ALL
-      TableName: AWS::StackName
+      TableName: !Ref DynamoDBTable
