@@ -19,7 +19,7 @@ Parameters:
   DynamoDBTable:
     Type: String
     Description: Amazon S3 bucket to bulk frames and audio outputs
-    Default: AWS::StackName
+    Default: 'globo-dpp-dynamo'
 
 Globals:
   Function:
