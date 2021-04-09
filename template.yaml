@@ -333,7 +333,7 @@ Resources:
           KeyType: HASH
         - AttributeName: file_name
           KeyType: RANGE
-      LocalSecondaryIndexes:
+      GlobalSecondaryIndexes:
         - IndexName: MediaConvertJobIndex
           KeySchema:
             - AttributeName: mediaconvert_job_id
