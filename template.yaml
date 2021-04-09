@@ -336,18 +336,18 @@ Resources:
       LocalSecondaryIndexes:
         - IndexName: MediaConvertJobIndex
           KeySchema:
-            - AttributeName: uuid
-              KeyType: RANGE
             - AttributeName: mediaconvert_job_id
               KeyType: HASH
+            - AttributeName: uuid
+              KeyType: RANGE
           Projection:
             ProjectionType: ALL
         - IndexName: TimeStampIndex
           KeySchema:
-            - AttributeName: uuid
-              KeyType: RANGE
             - AttributeName: creation_timestamp
               KeyType: HASH
+            - AttributeName: uuid
+              KeyType: RANGE
           Projection:
             ProjectionType: ALL
       TableName: !Ref DynamoDBTable
