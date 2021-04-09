@@ -120,6 +120,7 @@ Resources:
                   - dynamodb:Get*
                   - dynamodb:Delete*
                   - dynamodb:Query
+                  - dynamodb:Scan
                   - dynamodb:PutItem
                   - dynamodb:UpdateItem
                 Resource:
@@ -320,7 +321,16 @@ Resources:
       AttributeDefinitions:
         - AttributeName: uuid
           AttributeType: S
+        - AttributeName: mediaconvert_job_id
+          AttributeType: S
       KeySchema:
         - AttributeName: uuid
           KeyType: HASH
+      LocalSecondaryIndexes:
+        - IndexName: MediaConvertJobIndex
+          KeySchema:
+            - AttributeName: mediaconvert_job_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
       TableName: !Ref DynamoDBTable
