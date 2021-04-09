@@ -1,5 +1,7 @@
 from os import environ
 from boto3 import client
+from json import dumps
+
 import uuid
 
 mediaconvert_role = environ['MEDIACONVERT_ROLE']
@@ -19,7 +21,7 @@ def lambda_handler(event, context):
         'body': {}
     }
 
-    print("Processing the event: \n ",event)
+    print("Processing the event: \n ",dumps(event))
 
     if(validate_request_params(event) is False):
         response["statusCode"] = 400
@@ -314,7 +316,7 @@ def write_video_record_dynamodb(video_name,job_id,sample_rate=1,video_analysis_l
         uuid_string = str(uuid.uuid4())
         # TODO
         #   Handle existing uuid
-        #  dynamo_search_response = dynamodb_client.query(
+        #  dynamo_search_response = dynamodb_client.get_item(
         #     TableName=environ['DYNAMODB_TABLE_NAME'],
         #     Key={
         #       "uuid":{
@@ -340,7 +342,7 @@ def write_video_record_dynamodb(video_name,job_id,sample_rate=1,video_analysis_l
                     "S":"STARTED"
                 },
                 "sample_rate":{
-                    "N":sample_rate
+                    "N":str(sample_rate)
                 },
                 "video_analysis_list": {
                     "SS":video_analysis_list

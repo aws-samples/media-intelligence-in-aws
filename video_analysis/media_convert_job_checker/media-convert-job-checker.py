@@ -1,6 +1,6 @@
 from os import environ
 from boto3 import client
-import json
+from json import dumps
 
 region = environ['AWS_REGION']
 
@@ -19,7 +19,7 @@ def lambda_handler(event, context):
         'body': {}
     }
 
-    print("Processing the event: \n ",event)
+    print("Processing the event: \n ",dumps(event))
 
     if(validate_request_params(event) is False):
         response["statusCode"] = 400
@@ -27,7 +27,11 @@ def lambda_handler(event, context):
         return response
 
     sns_custom_payload = event['Records'][0]['Sns']['Message']
-    job_response = check_mediaconvert_job(sns_custom_payload.replace("job_id:",""))
+    sns_custom_payload = sns_custom_payload.replace("job_id:","")
+    sns_custom_payload = sanitize_string(sns_custom_payload)
+
+    job_response = check_mediaconvert_job(sns_custom_payload)
+
 
     if(job_response is False):
         response["statusCode"] = 500
@@ -40,9 +44,9 @@ def lambda_handler(event, context):
     else:
         response['body']['dynamodb_update'] = False
 
-    response["body"]["msg"] = "MediaConvert Job "+event["job_id"]+" status retreived"
+    response["body"]["msg"] = "MediaConvert Job "+job_response["id"]+" status retreived"
 
-    response["body"]["job_id"] = event["job_id"]
+    response["body"]["job_id"] = job_response["id"]
 
     # TODO
     #   Process the frame files to add timestamp depending on frame rate
@@ -115,9 +119,12 @@ def dynamodb_search_by_mediaconvert_jobid(dynamodb_client,job_id):
     try:
         dynamo_search_response = dynamodb_client.query(
             TableName=environ['DYNAMODB_TABLE_NAME'],
-            IndexName="mediaconvert_job_id",
             Select='ALL_ATTRIBUTES',
-            ConsistentRead=True
+            ConsistentRead=True,
+            KeyConditionExpression="mediaconvert_job_id = :mediaconvert_job_id",
+            ExpressionAttributeValues={
+                ':mediaconvert_job_id': {'S': job_id}
+            }
         )
     except Exception as e:
         print("Exception while getting item from DynamoDB \n",e)
@@ -162,6 +169,14 @@ def write_video_record_dynamodb(key,update_expression):
         assigned_uuid = ""
 
     return True
+
+def sanitize_string(string_variable):
+    string_variable=string_variable.replace("\n","")
+    string_variable = string_variable.replace("\"","")
+    string_variable = string_variable.replace("\'","")
+    string_variable = string_variable.replace("\r","")
+    string_variable = string_variable.replace(":","")
+    return string_variable
 
 def publish_to_sns(message):
     return False

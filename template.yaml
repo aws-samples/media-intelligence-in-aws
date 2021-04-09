@@ -118,10 +118,13 @@ Resources:
               - Effect: Allow
                 Action:
                   - dynamodb:Get*
-                  - dynamodb:Query
                   - dynamodb:Delete*
+                  - dynamodb:Query
                   - dynamodb:PutItem
-                Resource: !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
+                  - dynamodb:UpdateItem
+                Resource:
+                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
+                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
   LambdaRekognitionRole:
     Type: AWS::IAM::Role
     Properties:
