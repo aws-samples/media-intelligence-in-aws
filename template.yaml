@@ -31,7 +31,7 @@ Globals:
       Variables:
         INPUT_BUCKET: !Ref S3Bucket
         RESULTS_BUCKET: !Ref DestinationBucket
-        DYNAMODB_TABLE_NAME: AWS::StackName
+        DYNAMODB_TABLE_NAME: !Ref DynamoDBTable
 
 Resources:
   #############
@@ -242,6 +242,7 @@ Resources:
       Environment:
         Variables:
           SNS_TOPIC: !GetAtt VideoAnalysisTopic.TopicName
+          MC_JOB_INDEX_NAME: "MediaConvertJobIndex"
   SceneClassification:
     Type: AWS::Serverless::Function
     Properties:
@@ -336,17 +337,17 @@ Resources:
         - IndexName: MediaConvertJobIndex
           KeySchema:
             - AttributeName: uuid
-              KeyType: HASH
-            - AttributeName: mediaconvert_job_id
               KeyType: RANGE
+            - AttributeName: mediaconvert_job_id
+              KeyType: HASH
           Projection:
             ProjectionType: ALL
         - IndexName: TimeStampIndex
           KeySchema:
             - AttributeName: uuid
-              KeyType: HASH
-            - AttributeName: creation_timestamp
               KeyType: RANGE
+            - AttributeName: creation_timestamp
+              KeyType: HASH
           Projection:
             ProjectionType: ALL
       TableName: !Ref DynamoDBTable

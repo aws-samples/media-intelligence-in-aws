@@ -119,6 +119,7 @@ def dynamodb_search_by_mediaconvert_jobid(dynamodb_client,job_id):
     try:
         dynamo_search_response = dynamodb_client.query(
             TableName=environ['DYNAMODB_TABLE_NAME'],
+            IndexName=environ['MC_JOB_INDEX_NAME'],
             Select='ALL_ATTRIBUTES',
             ConsistentRead=True,
             KeyConditionExpression="mediaconvert_job_id = :mediaconvert_job_id",

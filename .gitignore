@@ -3,4 +3,5 @@
 samples/
 main.py
 y
+expression-attributes.json
 .DS_STORE
