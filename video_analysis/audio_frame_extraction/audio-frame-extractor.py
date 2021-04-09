@@ -39,7 +39,7 @@ def lambda_handler(event, context):
     file_name = (event["file_path"].split('/')[-1])
     file_name_no_extension = file_name.split('.')[-2]
 
-    write_to_dynamodb = write_video_record_dynamodb(file_name_no_extension,job_id)
+    write_to_dynamodb = write_video_record_dynamodb(file_name_no_extension,job_id,event["sample_rate"],event["video_analysis_list"])
     if write_to_dynamodb is not False:
         response['body']['dynamodb_write'] = True
     else:
@@ -74,6 +74,9 @@ def validate_request_params(request):
         return False
     if("sample_rate" not in request):
         print("sample_rate not found on request \n")
+        return False
+    if ("video_analysis_list" not in request):
+        print("video_analysis_list not found on request \n")
         return False
 
     return True
@@ -303,13 +306,15 @@ def convert_float_to_fraction(number, decimal_separator='.'):
 
     return numerator, denominator
 
-def write_video_record_dynamodb(video_name,job_id):
+def write_video_record_dynamodb(video_name,job_id,sample_rate=1,video_analysis_list=["ALL_AVAILABLE"]):
     dynamodb_client = init_boto3_client("dynamodb")
     if dynamodb_client is False:
         raise Exception("MediaConvert client creation failed")
     try:
         uuid_string = str(uuid.uuid4())
-        # dynamo_search_response = dynamodb_client.query(
+        # TODO
+        #   Handle existing uuid
+        #  dynamo_search_response = dynamodb_client.query(
         #     TableName=environ['DYNAMODB_TABLE_NAME'],
         #     Key={
         #       "uuid":{
@@ -333,14 +338,18 @@ def write_video_record_dynamodb(video_name,job_id):
                 },
                 "mediaconvert_job_status": {
                     "S":"STARTED"
+                },
+                "sample_rate":{
+                    "N":sample_rate
+                },
+                "video_analysis_list": {
+                    "SS":video_analysis_list
                 }
             }
         )
     except Exception as e:
         print("Exception while writing item to DynamoDB \n",e)
         return False
-    else:
-        assigned_uuid = ""
 
     return True
 

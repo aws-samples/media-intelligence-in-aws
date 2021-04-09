@@ -235,12 +235,18 @@ Resources:
       CodeUri: video_analysis/media_convert_job_checker/
       Handler: media-convert-job-checker.lambda_handler
       Role: !GetAtt LambdaMediaConvertRole.Arn
+      Environment:
+        Variables:
+          SNS_TOPIC: !GetAtt VideoAnalysisTopic.TopicName
   SceneClassification:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: video_analysis/scene_classification/
       Handler: scene-classification.lambda_handler
       Role: !GetAtt LambdaRekognitionRole.Arn
+      Environment:
+        Variables:
+          ANALYSIS_NAME: "SCENE_CLASSIFICATION"
 
   ####################
   #    SNS Topics    #
@@ -253,6 +259,14 @@ Resources:
             !GetAtt MediaConvertJobChecker.Arn
           Protocol: "lambda"
       TopicName: "MediaConvertJobStatus"
+  VideoAnalysisTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint:
+            !GetAtt SceneClassification.Arn
+          Protocol: "lambda"
+      TopicName: "VideoAnalysisTopic"
   ################
   # IAM Policies #
   ################
@@ -291,9 +305,8 @@ Resources:
           InputTransformer:
             InputPathsMap:
               job_id: "$.detail.jobId"
-              status: "$.detail.status"
             InputTemplate: |
-              "{"job_id": "<job_id>","status":"<status>"}"
+              "job_id:<job_id>"
   ####################
   #  DynamoDB Table  #
   ####################
