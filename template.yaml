@@ -18,8 +18,8 @@ Parameters:
     Default: "globo-dev"
   DynamoDBTable:
     Type: String
-    Description: DynamoDB Table to store results
-    Default: "globo-dpp"
+    Description: Amazon S3 bucket to bulk frames and audio outputs
+    Default: AWS::StackName
 
 Globals:
   Function:
@@ -31,7 +31,7 @@ Globals:
       Variables:
         INPUT_BUCKET: !Ref S3Bucket
         RESULTS_BUCKET: !Ref DestinationBucket
-        DYNAMODB_TABLE_NAME: !Ref DynamoDBTable
+        DYNAMODB_TABLE_NAME: AWS::StackName
 
 Resources:
   #############
@@ -333,4 +333,4 @@ Resources:
               KeyType: HASH
           Projection:
             ProjectionType: ALL
-      TableName: !Ref DynamoDBTable
+      TableName: AWS::StackName
