@@ -41,7 +41,7 @@ def lambda_handler(event, context):
     file_name = (event["file_path"].split('/')[-1])
     file_name_no_extension = file_name.split('.')[-2]
 
-    write_to_dynamodb = write_video_record_dynamodb(file_name_no_extension,job_id,event["sample_rate"],event["video_analysis_list"])
+    write_to_dynamodb = write_video_record_dynamodb(file_name,job_id,event["sample_rate"],event["video_analysis_list"])
     if write_to_dynamodb is not False:
         response['body']['dynamodb_write'] = True
     else:

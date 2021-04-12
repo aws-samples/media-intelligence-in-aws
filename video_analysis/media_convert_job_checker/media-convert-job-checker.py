@@ -38,15 +38,33 @@ def lambda_handler(event, context):
         response["body"] = {"msg": "Failed getting MediaConvertJob refer to the logs for more details"}
         return response
 
+    response["body"]["msg"] = "MediaConvert Job " + job_response["id"] + " status retreived"
+    response["body"]["job_id"] = job_response["id"]
+
     write_to_dynamodb = write_mediaconvert_status_to_dynamodb(job_response)
     if write_to_dynamodb is not False:
-        response['body']['dynamodb_update'] = True
+        response['body']['dynamodb_mc_update'] = True
     else:
-        response['body']['dynamodb_update'] = False
+        response['body']['dynamodb_mc_update'] = False
+        response['body']['sns_publish'] = False
+        return response
 
-    response["body"]["msg"] = "MediaConvert Job "+job_response["id"]+" status retreived"
+    subject_delimeter = "-"
+    uuid_key = write_to_dynamodb['uuid']['S']
+    file_name = write_to_dynamodb['file_name']['S']
+    video_analysis_list = write_to_dynamodb['video_analysis_list']['SS']
+    published_to_sns = publish_to_sns(subject_delimeter.join(video_analysis_list),uuid_key)
+    if published_to_sns is not False:
+        response['body']['sns_publish'] = True
+        update_expression,attributes_values = build_update_expression("video_analysis_status","STARTED","S")
+        write_to_dynamodb = write_video_record_dynamodb(uuid_key,file_name,update_expression,attributes_values)
+        if write_to_dynamodb is not False:
+            response['body']['dynamodb_videoanalysis_update'] = True
+        else:
+            response['body']['dynamodb_videoanalysis_update'] = False
+    else:
+        response['body']['sns_publish'] = False
 
-    response["body"]["job_id"] = job_response["id"]
 
     # TODO
     #   Process the frame files to add timestamp depending on frame rate
@@ -121,7 +139,6 @@ def dynamodb_search_by_mediaconvert_jobid(dynamodb_client,job_id):
             TableName=environ['DYNAMODB_TABLE_NAME'],
             IndexName=environ['MC_JOB_INDEX_NAME'],
             Select='ALL_ATTRIBUTES',
-            ConsistentRead=True,
             KeyConditionExpression="mediaconvert_job_id = :mediaconvert_job_id",
             ExpressionAttributeValues={
                 ':mediaconvert_job_id': {'S': job_id}
@@ -147,9 +164,18 @@ def write_mediaconvert_status_to_dynamodb(mediaconvert_job):
         print("No data found for mediaconvert job_id, verify the record exist on dynamodb")
         return False
 
-    return False
+    uuid_key = dynamodb_record['uuid']['S']
+    file_name = dynamodb_record['file_name']['S']
+    update_expression,attribute_values = build_update_expression("mediaconvert_job_status",mediaconvert_job["status"],"S")
+    update_expression,attribute_values = build_update_expression("mediaconvert_job_output_bucket",mediaconvert_job["output_bucket_path"],"S",update_expression,attribute_values)
+    write_to_dynamo = write_video_record_dynamodb(uuid_key,file_name,update_expression,attribute_values)
+    if(write_to_dynamo is False):
+        print("Failed to write to DynamoDB")
+        return False
 
-def write_video_record_dynamodb(key,update_expression):
+    return write_to_dynamo
+
+def write_video_record_dynamodb(hash_key,range_key,update_expression,expression_attributes_values):
     dynamodb_client = init_boto3_client("dynamodb")
     if dynamodb_client is False:
         raise Exception("MediaConvert client creation failed")
@@ -158,18 +184,21 @@ def write_video_record_dynamodb(key,update_expression):
             TableName=environ['DYNAMODB_TABLE_NAME'],
             Key={
                 "uuid":{
-                    "S":key
+                    "S":hash_key
+                },
+                "file_name":{
+                    "S":range_key
                 }
             },
-            UpdateExpression=update_expression
+            UpdateExpression=update_expression,
+            ExpressionAttributeValues=expression_attributes_values,
+            ReturnValues="ALL_NEW"
         )
     except Exception as e:
         print("Exception while writing item to DynamoDB \n",e)
         return False
-    else:
-        assigned_uuid = ""
 
-    return True
+    return dynamo_response['Attributes']
 
 def sanitize_string(string_variable):
     string_variable=string_variable.replace("\n","")
@@ -179,8 +208,41 @@ def sanitize_string(string_variable):
     string_variable = string_variable.replace(":","")
     return string_variable
 
-def publish_to_sns(message):
-    return False
+def build_update_expression(attribute,value,value_type,previous_expression = "",previous_values={}):
+    if previous_expression != "":
+        if "SET" in previous_expression:
+            previous_expression = previous_expression + ", " + attribute + " = :"+attribute+"val"
+        else:
+            previous_expression = "SET " + previous_expression + ", " + attribute + " = :"+attribute+"val"
+    else:
+        previous_expression = "SET " + attribute + " = :"+attribute+"val"
+
+    if len(previous_values) <= 0 or previous_values is {}:
+        previous_values = {
+            ":"+attribute+"val" : {
+                value_type:value
+            }
+        }
+    else:
+        previous_values[":" + attribute + "val"] = {
+            value_type: value
+        }
+
+    return previous_expression,previous_values
+
+def publish_to_sns(subject,message):
+    sns_client = init_boto3_client("sns")
+    try:
+        sns_response = sns_client.publish(
+            TopicArn=environ['SNS_TOPIC'],
+            Message=message,
+            Subject=subject
+        )
+    except Exception as e:
+        print("Exception while publishing to SNS Topic \n",e)
+        return False
+
+    return True
 
 def init_boto3_client(client_type="s3"):
     try:

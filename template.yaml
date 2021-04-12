@@ -126,6 +126,11 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
                   - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource:
+                  - !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"
   LambdaRekognitionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -241,7 +246,7 @@ Resources:
       Role: !GetAtt LambdaMediaConvertRole.Arn
       Environment:
         Variables:
-          SNS_TOPIC: !GetAtt VideoAnalysisTopic.TopicName
+          SNS_TOPIC: !Ref VideoAnalysisTopic
           MC_JOB_INDEX_NAME: "MediaConvertJobIndex"
   SceneClassification:
     Type: AWS::Serverless::Function
@@ -252,7 +257,23 @@ Resources:
       Environment:
         Variables:
           ANALYSIS_NAME: "SCENE_CLASSIFICATION"
-
+  ####################
+  #Lambda Permissions#
+  ####################
+  MCLambdaInvokePermissions:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: "lambda:InvokeFunction"
+      Principal: "sns.amazonaws.com"
+      SourceArn: !Ref MediaConvertTopic
+      FunctionName: !GetAtt MediaConvertJobChecker.Arn
+  SceneClassificationLambdaInvokePermissions:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: "lambda:InvokeFunction"
+      Principal: "sns.amazonaws.com"
+      SourceArn: !Ref VideoAnalysisTopic
+      FunctionName: !GetAtt SceneClassification.Arn
   ####################
   #    SNS Topics    #
   ####################
