@@ -1,8 +1,10 @@
 from os import environ
+
 from boto3 import client
 from json import dumps
 from time import time
 import uuid
+import HelperLibrary
 
 mediaconvert_role = environ['MEDIACONVERT_ROLE']
 destination_bucket = environ['MEDIACONVERT_DESTINATION_BUCKET']
@@ -309,61 +311,32 @@ def convert_float_to_fraction(number, decimal_separator='.'):
     return numerator, denominator
 
 def write_video_record_dynamodb(video_name,job_id,sample_rate=1,video_analysis_list=["ALL_AVAILABLE"]):
-    dynamodb_client = init_boto3_client("dynamodb")
-    if dynamodb_client is False:
-        raise Exception("MediaConvert client creation failed")
-    try:
-        uuid_string = str(uuid.uuid4())
-        # TODO
-        #   Handle existing uuid
-        #  dynamo_search_response = dynamodb_client.get_item(
-        #     TableName=environ['DYNAMODB_TABLE_NAME'],
-        #     Key={
-        #       "uuid":{
-        #          "S":uuid
-        #        }
-        #     },
-        #     AttributesToGet=['uuid'],
-        #     ConsistentRead=True,
-        # )
-        dynamo_response = dynamodb_client.put_item(
-            TableName=environ['DYNAMODB_TABLE_NAME'],
-            Item={
-                "uuid":{
-                    "S":uuid_string
-                },
-                "file_name": {
-                    "S":video_name
-                },
-                "mediaconvert_job_id": {
-                    "S":job_id
-                },
-                "mediaconvert_job_status": {
-                    "S":"STARTED"
-                },
-                "creation_timestamp": {
-                    "S": str(time())
-                },
-                "sample_rate":{
-                    "N":str(sample_rate)
-                },
-                "video_analysis_list": {
-                    "SS":video_analysis_list
-                }
+    dynamodb_helper = DynamoDBHelper(environ['DYNAMODB_TABLE_NAME'],region)
+    uuid_string = str(uuid.uuid4())
+    item = {
+            "uuid":{
+                "S":uuid_string
+            },
+            "file_name": {
+                "S":video_name
+            },
+            "mediaconvert_job_id": {
+                "S":job_id
+            },
+            "mediaconvert_job_status": {
+                "S":"STARTED"
+            },
+            "creation_timestamp": {
+                "S": str(time())
+            },
+            "sample_rate":{
+                "N":str(sample_rate)
+            },
+            "video_analysis_list": {
+                "SS":video_analysis_list
             }
-        )
-    except Exception as e:
-        print("Exception while writing item to DynamoDB \n",e)
-        return False
+    }
+    dynamo_response = dynamodb_helper.write_to_dynamodb(item)
 
-    return True
+    return dynamo_response
 
-
-def init_boto3_client(client_type="s3"):
-    try:
-        custom_client = client(client_type, region_name=region)
-    except Exception as e:
-        print("An error occurred while initializing "+client_type.capitalize()+"Client \n", e)
-        return False
-
-    return custom_client

@@ -23,15 +23,18 @@ Parameters:
 
 Globals:
   Function:
-    Runtime: python3.7
+    Runtime: python3.8
     Handler: app.lambda_handler
     Timeout: 300
     MemorySize: 1024
+    Layers:
+      - !Ref HelperLibrary
     Environment:
       Variables:
         INPUT_BUCKET: !Ref S3Bucket
         RESULTS_BUCKET: !Ref DestinationBucket
         DYNAMODB_TABLE_NAME: !Ref DynamoDBTable
+        ALL_ANALYSIS_NAME: "ALL_AVAILABLE"
 
 Resources:
   #############
@@ -274,6 +277,17 @@ Resources:
       Principal: "sns.amazonaws.com"
       SourceArn: !Ref VideoAnalysisTopic
       FunctionName: !GetAtt SceneClassification.Arn
+  #####################
+  #Lambda Custom Layer#
+  #####################
+  HelperLibrary:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: "HelperLibrary"
+      Description: "Library of different reusable helpers"
+      ContentUri: helper_library/
+      CompatibleRuntimes:
+        - python3.8
   ####################
   #    SNS Topics    #
   ####################

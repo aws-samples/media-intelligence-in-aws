@@ -1,10 +1,11 @@
 from os import environ
 from boto3 import client
+from json import dumps
+import HelperLibrary as helpers
 
 region = environ['AWS_REGION']
-
-# TODO
-#   Save to DynamoDB
+anylisis_name = environ['ANALYSIS_NAME']
+all_anylisis_flag = environ['ALL_ANALYSIS_NAME']
 
 def lambda_handler(event, context):
 
@@ -16,14 +17,34 @@ def lambda_handler(event, context):
         'body': {}
     }
 
-    print("Processing the event: \n ",event)
+    print("Processing the event: \n ", dumps(event))
 
-    if(validate_request_params(event) is False):
+    if (validate_request_params(event) is False):
         response["statusCode"] = 400
-        response["body"] = {"msg":"Missing parameters, please check your request"}
+        response["body"] = {"msg": "Missing parameters, please check your request"}
         return response
 
-    # List bucket objects
+    sns_subject = event['Records'][0]['Sns']['Subject']
+    if(anylisis_name not in sns_subject and all_anylisis_flag  not in sns_subject):
+        response["statusCode"] = 400
+        response["body"] = {"msg": "Wrong analysis flag name in: "+sns_subject}
+        return response
+
+    sns_message = event['Records'][0]['Sns']['Message']
+    sns_message = sns_message.replace("job_id:", "")
+    sns_message = sanitize_string(sns_message)
+
+    # TODO
+    #   Get item from Dynamo
+    #   Get bucket for response
+    #   Update analysis status,
+    #   List bucket objects
+    #   Save results per object
+    #   Update analysis status
+    #   Publish to sns completition
+
+
+
     response['body'] = start_rekognition_label_job(event['frames_bucket'],event['frames_folder'])
 
 
@@ -80,14 +101,15 @@ def start_rekognition_label_job(s3_bucket,analysis_path,min_confidence=70,name_i
 
 
 def validate_request_params(request):
-    if("frames_bucket" not in request):
-        print("frames_bucket not found on request \n")
+    if('Sns' not in request['Records'][0]['Sns']):
+        print("No SNS message")
         return False
-
-    if("frames_folder" not in request):
-        print("frames_folder not found on request \n")
+    if(request['Records'][0]['Sns']['Message'] == ""):
+        print("No message found on request \n")
         return False
-
+    if (request['Records'][0]['Sns']['Subject'] == ""):
+        print("No subject on request \n")
+        return False
     return True
 
 def init_boto3_client(client_type="s3"):
@@ -138,5 +160,12 @@ def process_s3_object_list(s3_objects_list,name_identifier="_frame_"):
 
     return object_name_list
 
+def sanitize_string(string_variable):
+    string_variable=string_variable.replace("\n","")
+    string_variable = string_variable.replace("\"","")
+    string_variable = string_variable.replace("\'","")
+    string_variable = string_variable.replace("\r","")
+    string_variable = string_variable.replace(":","")
+    return string_variable
 
 

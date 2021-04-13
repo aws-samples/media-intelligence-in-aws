@@ -1,6 +1,7 @@
 from os import environ
 from boto3 import client
 from json import dumps
+import HelperLibrary
 
 region = environ['AWS_REGION']
 
@@ -41,7 +42,9 @@ def lambda_handler(event, context):
     response["body"]["msg"] = "MediaConvert Job " + job_response["id"] + " status retreived"
     response["body"]["job_id"] = job_response["id"]
 
-    write_to_dynamodb = write_mediaconvert_status_to_dynamodb(job_response)
+    dynamo_helper = DynamoDBHelper(environ['DYNAMODB_TABLE_NAME'], region)
+
+    write_to_dynamodb = write_mediaconvert_status_to_dynamodb(dynamo_helper,job_response)
     if write_to_dynamodb is not False:
         response['body']['dynamodb_mc_update'] = True
     else:
@@ -50,14 +53,16 @@ def lambda_handler(event, context):
         return response
 
     subject_delimeter = "-"
-    uuid_key = write_to_dynamodb['uuid']['S']
-    file_name = write_to_dynamodb['file_name']['S']
     video_analysis_list = write_to_dynamodb['video_analysis_list']['SS']
     published_to_sns = publish_to_sns(subject_delimeter.join(video_analysis_list),uuid_key)
     if published_to_sns is not False:
         response['body']['sns_publish'] = True
-        update_expression,attributes_values = build_update_expression("video_analysis_status","STARTED","S")
-        write_to_dynamodb = write_video_record_dynamodb(uuid_key,file_name,update_expression,attributes_values)
+        primery_key_structure = {
+            "uuid_key": write_to_dynamodb['uuid'],
+            "file_name": write_to_dynamodb['file_name']
+        }
+        update_expression,attributes_values = dynamo_helper.build_update_expression("video_analysis_status","STARTED","S")
+        write_to_dynamodb = write_video_record_dynamodb(primery_key_structure,update_expression,attributes_values)
         if write_to_dynamodb is not False:
             response['body']['dynamodb_videoanalysis_update'] = True
         else:
@@ -133,72 +138,46 @@ def rename_frames_to_timestamp(name_modifier="_frame_"):
     # List frame objects, create pattern, update s3 files
     return True
 
-def dynamodb_search_by_mediaconvert_jobid(dynamodb_client,job_id):
-    try:
-        dynamo_search_response = dynamodb_client.query(
-            TableName=environ['DYNAMODB_TABLE_NAME'],
-            IndexName=environ['MC_JOB_INDEX_NAME'],
-            Select='ALL_ATTRIBUTES',
-            KeyConditionExpression="mediaconvert_job_id = :mediaconvert_job_id",
-            ExpressionAttributeValues={
-                ':mediaconvert_job_id': {'S': job_id}
-            }
-        )
-    except Exception as e:
-        print("Exception while getting item from DynamoDB \n",e)
+def dynamodb_search_by_mediaconvert_jobid(dynamodb_helper,job_id):
+    dynamo_search_response = dynamodb_helper.query(
+        environ['MC_JOB_INDEX_NAME'],
+        "mediaconvert_job_id = :mediaconvert_job_id",
+        {
+            ':mediaconvert_job_id': {'S': job_id}
+        }
+    )
+    if(len(dynamo_search_response['Items']) <= 0 or dynamo_search_response is False):
+        print("No item found with mediaconvert_job_id: "+job_id)
         return False
-    else:
-        if(len(dynamo_search_response['Items']) <= 0):
-            print("No item found with mediaconvert_job_id: "+job_id)
-            return False
-        return dynamo_search_response['Items'][0]
+    return dynamo_search_response['Items'][0]
 
-def write_mediaconvert_status_to_dynamodb(mediaconvert_job):
-    dynamodb_client = init_boto3_client("dynamodb")
-    if dynamodb_client is False:
-        raise Exception("MediaConvert client creation failed")
+def write_mediaconvert_status_to_dynamodb(dynamo_helper,mediaconvert_job):
 
-    dynamodb_record = dynamodb_search_by_mediaconvert_jobid(dynamodb_client,mediaconvert_job['id'])
-    print("Dynamo record: \n",dynamodb_record)
+
+    dynamodb_record = dynamodb_search_by_mediaconvert_jobid(dynamo_helper,mediaconvert_job['id'])
     if(dynamodb_record is False):
         print("No data found for mediaconvert job_id, verify the record exist on dynamodb")
         return False
 
     uuid_key = dynamodb_record['uuid']['S']
     file_name = dynamodb_record['file_name']['S']
-    update_expression,attribute_values = build_update_expression("mediaconvert_job_status",mediaconvert_job["status"],"S")
-    update_expression,attribute_values = build_update_expression("mediaconvert_job_output_bucket",mediaconvert_job["output_bucket_path"],"S",update_expression,attribute_values)
-    write_to_dynamo = write_video_record_dynamodb(uuid_key,file_name,update_expression,attribute_values)
-    if(write_to_dynamo is False):
+    update_expression,attribute_values = dynamo_helper.build_update_expression("mediaconvert_job_status",mediaconvert_job["status"],"S")
+    update_expression,attribute_values = dynamo_helper.build_update_expression("mediaconvert_job_output_bucket",mediaconvert_job["output_bucket_path"],"S",update_expression,attribute_values)
+    primary_key_structure = {
+        "uuid":{
+            "S":hash_key
+        },
+        "file_name":{
+            "S":range_key
+        }
+    }
+    update_to_dynamo = dynamo_helper.update_dynamodb_item(primary_key_structure,update_expression,attribute_values)
+    if(update_to_dynamo is False):
         print("Failed to write to DynamoDB")
         return False
 
-    return write_to_dynamo
+    return update_to_dynamo
 
-def write_video_record_dynamodb(hash_key,range_key,update_expression,expression_attributes_values):
-    dynamodb_client = init_boto3_client("dynamodb")
-    if dynamodb_client is False:
-        raise Exception("MediaConvert client creation failed")
-    try:
-        dynamo_response = dynamodb_client.update_item(
-            TableName=environ['DYNAMODB_TABLE_NAME'],
-            Key={
-                "uuid":{
-                    "S":hash_key
-                },
-                "file_name":{
-                    "S":range_key
-                }
-            },
-            UpdateExpression=update_expression,
-            ExpressionAttributeValues=expression_attributes_values,
-            ReturnValues="ALL_NEW"
-        )
-    except Exception as e:
-        print("Exception while writing item to DynamoDB \n",e)
-        return False
-
-    return dynamo_response['Attributes']
 
 def sanitize_string(string_variable):
     string_variable=string_variable.replace("\n","")
@@ -207,28 +186,6 @@ def sanitize_string(string_variable):
     string_variable = string_variable.replace("\r","")
     string_variable = string_variable.replace(":","")
     return string_variable
-
-def build_update_expression(attribute,value,value_type,previous_expression = "",previous_values={}):
-    if previous_expression != "":
-        if "SET" in previous_expression:
-            previous_expression = previous_expression + ", " + attribute + " = :"+attribute+"val"
-        else:
-            previous_expression = "SET " + previous_expression + ", " + attribute + " = :"+attribute+"val"
-    else:
-        previous_expression = "SET " + attribute + " = :"+attribute+"val"
-
-    if len(previous_values) <= 0 or previous_values is {}:
-        previous_values = {
-            ":"+attribute+"val" : {
-                value_type:value
-            }
-        }
-    else:
-        previous_values[":" + attribute + "val"] = {
-            value_type: value
-        }
-
-    return previous_expression,previous_values
 
 def publish_to_sns(subject,message):
     sns_client = init_boto3_client("sns")
