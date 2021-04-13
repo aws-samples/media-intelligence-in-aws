@@ -23,7 +23,7 @@ Parameters:
 
 Globals:
   Function:
-    Runtime: python3.8
+    Runtime: python3.7
     Handler: app.lambda_handler
     Timeout: 300
     MemorySize: 1024
@@ -287,7 +287,7 @@ Resources:
       Description: "Library of different reusable helpers"
       ContentUri: helper_library/
       CompatibleRuntimes:
-        - python3.8
+        - python3.7
   ####################
   #    SNS Topics    #
   ####################
