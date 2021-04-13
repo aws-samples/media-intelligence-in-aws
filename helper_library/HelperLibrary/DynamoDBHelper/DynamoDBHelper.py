@@ -1,4 +1,4 @@
-import helper_library.HelperLibrary.BaseHelper as BaseHelper
+from HelperLibrary.BaseHelper import BaseHelper
 
 class DynamoDBHelper(BaseHelper):
 

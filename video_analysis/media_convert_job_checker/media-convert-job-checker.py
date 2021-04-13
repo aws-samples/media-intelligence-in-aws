@@ -1,7 +1,7 @@
 from os import environ
 from boto3 import client
 from json import dumps
-import HelperLibrary
+from HelperLibrary.DynamoDBHelper.DynamoDBHelper import DynamoDBHelper
 
 region = environ['AWS_REGION']
 

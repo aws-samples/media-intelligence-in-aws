@@ -4,7 +4,7 @@ from boto3 import client
 from json import dumps
 from time import time
 import uuid
-import HelperLibrary
+from HelperLibrary.DynamoDBHelper.DynamoDBHelper import DynamoDBHelper
 
 mediaconvert_role = environ['MEDIACONVERT_ROLE']
 destination_bucket = environ['MEDIACONVERT_DESTINATION_BUCKET']
