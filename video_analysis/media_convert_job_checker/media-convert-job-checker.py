@@ -139,7 +139,7 @@ def rename_frames_to_timestamp(name_modifier="_frame_"):
     return True
 
 def dynamodb_search_by_mediaconvert_jobid(dynamodb_helper,job_id):
-    dynamo_search_response = dynamodb_helper.query(
+    dynamo_search_response = dynamodb_helper.query_item(
         environ['MC_JOB_INDEX_NAME'],
         "mediaconvert_job_id = :mediaconvert_job_id",
         {
