@@ -54,15 +54,16 @@ def lambda_handler(event, context):
 
     subject_delimeter = "-"
     video_analysis_list = write_to_dynamodb['video_analysis_list']['SS']
-    published_to_sns = publish_to_sns(subject_delimeter.join(video_analysis_list),uuid_key)
+    message = "{uuid: " + write_to_dynamodb['uuid']['S'] + "," + "file_name: " + write_to_dynamodb['file_name']['S'] + "}"
+    published_to_sns = publish_to_sns(subject_delimeter.join(video_analysis_list),message)
     if published_to_sns is not False:
         response['body']['sns_publish'] = True
-        primery_key_structure = {
+        primary_key_structure = {
             "uuid_key": write_to_dynamodb['uuid'],
             "file_name": write_to_dynamodb['file_name']
         }
         update_expression,attributes_values = dynamo_helper.build_update_expression("video_analysis_status","STARTED","S")
-        write_to_dynamodb = write_video_record_dynamodb(primery_key_structure,update_expression,attributes_values)
+        write_to_dynamodb = dynamo_helper.update_dynamodb_item(primary_key_structure,update_expression,attributes_values)
         if write_to_dynamodb is not False:
             response['body']['dynamodb_videoanalysis_update'] = True
         else:
@@ -149,7 +150,7 @@ def dynamodb_search_by_mediaconvert_jobid(dynamodb_helper,job_id):
     if(len(dynamo_search_response['Items']) <= 0 or dynamo_search_response is False):
         print("No item found with mediaconvert_job_id: "+job_id)
         return False
-    return dynamo_search_response['Items'][0]
+    return dynamo_search_response
 
 def write_mediaconvert_status_to_dynamodb(dynamo_helper,mediaconvert_job):
 
@@ -165,10 +166,10 @@ def write_mediaconvert_status_to_dynamodb(dynamo_helper,mediaconvert_job):
     update_expression,attribute_values = dynamo_helper.build_update_expression("mediaconvert_job_output_bucket",mediaconvert_job["output_bucket_path"],"S",update_expression,attribute_values)
     primary_key_structure = {
         "uuid":{
-            "S":hash_key
+            "S":uuid_key
         },
         "file_name":{
-            "S":range_key
+            "S":file_name
         }
     }
     update_to_dynamo = dynamo_helper.update_dynamodb_item(primary_key_structure,update_expression,attribute_values)

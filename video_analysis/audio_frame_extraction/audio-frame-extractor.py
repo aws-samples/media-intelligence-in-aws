@@ -1,17 +1,13 @@
 from os import environ
-
 from boto3 import client
 from json import dumps
 from time import time
-import uuid
 from HelperLibrary.DynamoDBHelper.DynamoDBHelper import DynamoDBHelper
+import uuid
 
 mediaconvert_role = environ['MEDIACONVERT_ROLE']
 destination_bucket = environ['MEDIACONVERT_DESTINATION_BUCKET']
 region = environ['AWS_REGION']
-
-# TODO
-
 
 def lambda_handler(event, context):
 
@@ -41,7 +37,6 @@ def lambda_handler(event, context):
     response["body"]["job_id"] = job_id
 
     file_name = (event["file_path"].split('/')[-1])
-    file_name_no_extension = file_name.split('.')[-2]
 
     write_to_dynamodb = write_video_record_dynamodb(file_name,job_id,event["sample_rate"],event["video_analysis_list"])
     if write_to_dynamodb is not False:
@@ -312,7 +307,19 @@ def convert_float_to_fraction(number, decimal_separator='.'):
 
 def write_video_record_dynamodb(video_name,job_id,sample_rate=1,video_analysis_list=["ALL_AVAILABLE"]):
     dynamodb_helper = DynamoDBHelper(environ['DYNAMODB_TABLE_NAME'],region)
-    uuid_string = str(uuid.uuid4())
+    uuid_exists = True
+    while(uuid_exists is not False):
+        uuid_string = str(uuid.uuid4())
+        key = {
+            "uuid": {
+                "S": uuid_string
+            },
+            "file_name": {
+                "S": video_name
+            }
+        }
+        uuid_exists = DynamoDBHelper.get_item(key,"uuid")
+
     item = {
             "uuid":{
                 "S":uuid_string
@@ -336,7 +343,7 @@ def write_video_record_dynamodb(video_name,job_id,sample_rate=1,video_analysis_l
                 "SS":video_analysis_list
             }
     }
-    dynamo_response = dynamodb_helper.write_to_dynamodb(item)
+    dynamo_response = dynamodb_helper.write_to_dynamodb(item,key)
 
     return dynamo_response
 

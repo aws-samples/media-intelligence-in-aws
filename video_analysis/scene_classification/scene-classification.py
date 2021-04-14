@@ -1,7 +1,8 @@
 from os import environ
 from boto3 import client
-from json import dumps
-import HelperLibrary as helpers
+from json import dumps,loads
+from HelperLibrary.DynamoDBHelper.DynamoDBHelper import DynamoDBHelper
+from HelperLibrary.BaseHelper import BaseHelper
 
 region = environ['AWS_REGION']
 anylisis_name = environ['ANALYSIS_NAME']
@@ -31,8 +32,8 @@ def lambda_handler(event, context):
         return response
 
     sns_message = event['Records'][0]['Sns']['Message']
-    sns_message = sns_message.replace("job_id:", "")
-    sns_message = sanitize_string(sns_message)
+    sns_message_json = loads(sns_message)
+
 
     # TODO
     #   Get item from Dynamo
@@ -42,21 +43,51 @@ def lambda_handler(event, context):
     #   Save results per object
     #   Update analysis status
     #   Publish to sns completition
+    dynamo_helper = DynamoDBHelper(environ['DYNAMODB_TABLE_NAME'], region)
+    primary_key_structure = {
+        "uuid_key": {
+            'S': sns_message_json["uuid"]
+        },
+        "file_name": {
+            'S': sns_message_json['file_name']
+        }
+    }
 
+    dynamo_record = dynamo_helper.get_item(primary_key_structure)
+    if(dynamo_record is False):
+        print("No record found on DynamoDB for key: \n",dumps(primary_key_structure))
+        response["statusCode"] = 404
+        response["body"] = {"msg": "No record found on DynamoDB"}
+        return response
 
+    update_expression, attributes_values = dynamo_helper.build_update_expression("scene_classification_status", "STARTED","S")
+    write_to_dynamodb = dynamo_helper.update_dynamodb_item(primary_key_structure, update_expression, attributes_values)
+    if write_to_dynamodb is not False:
+        response['body']['dynamodb_scene_classification_update'] = True
+    else:
+        response['body']['dynamodb_scene_classification_update'] = False
 
-    response['body'] = start_rekognition_label_job(event['frames_bucket'],event['frames_folder'])
+    if('item_offset' in sns_message_json):
+        response["body"] = continue_scene_classification_job(dynamo_helper,dynamo_record,sns_message_json['item_offset'])
+
+    response["body"] = start_rekognition_label_job(dynamo_helper,dynamo_record)
 
 
     return response
 
-def start_rekognition_label_job(s3_bucket,analysis_path,min_confidence=70,name_identifier="_frame_"):
-    s3_client = init_boto3_client('s3')
-    rekognition_client = init_boto3_client('rekognition')
+def start_rekognition_label_job(dynamo_helper,dynamo_record,min_confidence=70,name_identifier="_frame_"):
+    response = {}
+    base_helper = BaseHelper("Helper")
+    s3_client = base_helper.init_boto3_client('s3',region)
+    rekognition_client = base_helper.init_boto3_client('rekognition',region)
 
     if s3_client is False:
         raise Exception("S3 client creation failed")
 
+
+    delimeter = '/'
+    s3_bucket = delimeter.join(dynamo_record['mediaconvert_job_output_bucket'].split(delimeter)[2:3])
+    analysis_path = delimeter.join(dynamo_record['mediaconvert_job_output_bucket'].split(delimeter)[3:-1])+"/"
     s3_objects = get_s3_object_list(s3_client,s3_bucket,analysis_path)
 
     if(s3_objects is False):
@@ -97,7 +128,10 @@ def start_rekognition_label_job(s3_bucket,analysis_path,min_confidence=70,name_i
             }
             analysis_results.append(result_base.copy())
 
-    return {"msg": "Job completed for "+str(len(object_name_list))+" frames","data":analysis_results}
+    response['msg'] = "Job completed for "+str(len(object_name_list))+" frames"
+    response["data"] = analysis_results
+
+    return response
 
 
 def validate_request_params(request):
@@ -111,15 +145,6 @@ def validate_request_params(request):
         print("No subject on request \n")
         return False
     return True
-
-def init_boto3_client(client_type="s3"):
-    try:
-        custom_client = client(client_type, region_name=region)
-    except Exception as e:
-        print("An error occurred while initializing "+client_type.capitalize()+"Client \n", e)
-        return False
-
-    return custom_client
 
 def get_s3_object_list(s3_client,s3_bucket,path,marker=''):
     s3_objects = []
@@ -168,4 +193,5 @@ def sanitize_string(string_variable):
     string_variable = string_variable.replace(":","")
     return string_variable
 
-
+def continue_scene_classification_job(dynamo_helper,dynamo_record,item_offset):
+    return False
