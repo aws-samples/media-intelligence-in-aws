@@ -343,7 +343,7 @@ def write_video_record_dynamodb(video_name,job_id,sample_rate=1,video_analysis_l
                 "SS":video_analysis_list
             }
     }
-    dynamo_response = dynamodb_helper.write_to_dynamodb(item,key)
+    dynamo_response = dynamodb_helper.write_to_dynamodb(item)
 
     return dynamo_response
 

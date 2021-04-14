@@ -32,7 +32,7 @@ def lambda_handler(event, context):
         return response
 
     sns_message = event['Records'][0]['Sns']['Message']
-    sns_message_json = loads(sns_message)
+    sns_message_json = loads(loads(sns_message))
 
 
     # TODO
@@ -135,7 +135,7 @@ def start_rekognition_label_job(dynamo_helper,dynamo_record,min_confidence=70,na
 
 
 def validate_request_params(request):
-    if('Sns' not in request['Records'][0]['Sns']):
+    if('Sns' not in request['Records'][0]):
         print("No SNS message")
         return False
     if(request['Records'][0]['Sns']['Message'] == ""):

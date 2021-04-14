@@ -54,12 +54,16 @@ def lambda_handler(event, context):
 
     subject_delimeter = "-"
     video_analysis_list = write_to_dynamodb['video_analysis_list']['SS']
-    message = "{uuid: " + write_to_dynamodb['uuid']['S'] + "," + "file_name: " + write_to_dynamodb['file_name']['S'] + "}"
-    published_to_sns = publish_to_sns(subject_delimeter.join(video_analysis_list),message)
+    message_obj = {
+        'uuid': write_to_dynamodb['uuid']['S'],
+        'file_name': write_to_dynamodb['file_name']['S']
+    }
+    message_string = dumps(dumps(message_obj))
+    published_to_sns = publish_to_sns(subject_delimeter.join(video_analysis_list),message_string)
     if published_to_sns is not False:
         response['body']['sns_publish'] = True
         primary_key_structure = {
-            "uuid_key": write_to_dynamodb['uuid'],
+            "uuid": write_to_dynamodb['uuid'],
             "file_name": write_to_dynamodb['file_name']
         }
         update_expression,attributes_values = dynamo_helper.build_update_expression("video_analysis_status","STARTED","S")
@@ -147,7 +151,7 @@ def dynamodb_search_by_mediaconvert_jobid(dynamodb_helper,job_id):
             ':mediaconvert_job_id': {'S': job_id}
         }
     )
-    if(len(dynamo_search_response['Items']) <= 0 or dynamo_search_response is False):
+    if(len(dynamo_search_response) <= 0 or dynamo_search_response is False):
         print("No item found with mediaconvert_job_id: "+job_id)
         return False
     return dynamo_search_response
