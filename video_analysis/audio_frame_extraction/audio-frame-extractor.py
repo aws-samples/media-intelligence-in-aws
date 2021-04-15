@@ -26,7 +26,7 @@ def lambda_handler(event, context):
         response["body"] = {"msg":"Missing parameters, please check your request"}
         return response
 
-    job_id = start_mediaconvert_job(event["file_path"],event["sample_rate"])
+    job_id,uuid_string = start_mediaconvert_job(event["file_path"],event["sample_rate"])
 
     if(job_id is False):
         response["statusCode"] = 500
@@ -38,7 +38,7 @@ def lambda_handler(event, context):
 
     file_name = (event["file_path"].split('/')[-1])
 
-    write_to_dynamodb = write_video_record_dynamodb(file_name,job_id,event["sample_rate"],event["video_analysis_list"])
+    write_to_dynamodb = write_video_record_dynamodb(uuid_string,file_name,job_id,event["sample_rate"],event["video_analysis_list"])
     if write_to_dynamodb is not False:
         response['body']['dynamodb_write'] = True
     else:
@@ -52,7 +52,7 @@ def start_mediaconvert_job(s3_key,sample_rate):
     if mc_client is False:
         raise Exception("MediaConvert client creation failed")
 
-    settings = build_media_convert_job_settings(s3_key,sample_rate)
+    settings,uuid_string = build_media_convert_job_settings(s3_key,sample_rate)
     try:
         job_response = mc_client.create_job(
             Role=mediaconvert_role,
@@ -64,7 +64,7 @@ def start_mediaconvert_job(s3_key,sample_rate):
     else:
         job_id = job_response['Job']['Id']
 
-    return job_id
+    return job_id,uuid_string
 
 
 def validate_request_params(request):
@@ -101,12 +101,29 @@ def init_media_convert_client():
     return mediaconvert_client
 
 def build_media_convert_job_settings(s3_key,sample_rate = 1):
+    dynamodb_helper = DynamoDBHelper(environ['DYNAMODB_TABLE_NAME'],region)
 
     delimeter = '/'
-    destination_bucket_uri = "s3://"+destination_bucket+"/videos/analysis/"
-
     file_name = (s3_key.split(delimeter)[-1])
     file_name_no_extension = file_name.split('.')[-2]
+
+    uuid_exists = True
+    while (uuid_exists is not False):
+        uuid_string = str(uuid.uuid4())
+        key = {
+            "uuid": {
+                "S": uuid_string
+            },
+            "file_name": {
+                "S": file_name_no_extension
+            }
+        }
+        uuid_exists = dynamodb_helper.get_item(key, "#uuid_key = :val",{'#uuid_key':'uuid'})
+
+
+    destination_bucket_uri = "s3://"+destination_bucket+"/videos/analysis/"+uuid_string+"/"
+
+
 
     #Always a video required as an output for MediaConvert
     base_video_output = {
@@ -285,7 +302,7 @@ def build_media_convert_job_settings(s3_key,sample_rate = 1):
     base_input["FileInput"] = s3_key
     base_settings["Inputs"].append(base_input.copy())
 
-    return base_settings
+    return base_settings,uuid_string
 
 
 def convert_float_to_fraction(number, decimal_separator='.'):
@@ -305,21 +322,8 @@ def convert_float_to_fraction(number, decimal_separator='.'):
 
     return numerator, denominator
 
-def write_video_record_dynamodb(video_name,job_id,sample_rate=1,video_analysis_list=["ALL_AVAILABLE"]):
+def write_video_record_dynamodb(uuid_string,video_name,job_id,sample_rate=1,video_analysis_list=["ALL_AVAILABLE"]):
     dynamodb_helper = DynamoDBHelper(environ['DYNAMODB_TABLE_NAME'],region)
-    uuid_exists = True
-    while(uuid_exists is not False):
-        uuid_string = str(uuid.uuid4())
-        key = {
-            "uuid": {
-                "S": uuid_string
-            },
-            "file_name": {
-                "S": video_name
-            }
-        }
-        uuid_exists = DynamoDBHelper.get_item(key,"uuid")
-
     item = {
             "uuid":{
                 "S":uuid_string

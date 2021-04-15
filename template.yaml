@@ -190,6 +190,17 @@ Resources:
                   - logs:PutLogEvents
                 Resource:
                   - arn:aws:logs:*:*:*:*
+              - Effect: Allow
+                Action:
+                  - dynamodb:Get*
+                  - dynamodb:Delete*
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                Resource:
+                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
+                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
   SimpleLambdaRole:
     Type: AWS::IAM::Role
     Properties:

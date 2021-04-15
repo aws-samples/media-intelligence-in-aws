@@ -45,7 +45,7 @@ def lambda_handler(event, context):
     #   Publish to sns completition
     dynamo_helper = DynamoDBHelper(environ['DYNAMODB_TABLE_NAME'], region)
     primary_key_structure = {
-        "uuid_key": {
+        "uuid": {
             'S': sns_message_json["uuid"]
         },
         "file_name": {
@@ -86,8 +86,8 @@ def start_rekognition_label_job(dynamo_helper,dynamo_record,min_confidence=70,na
 
 
     delimeter = '/'
-    s3_bucket = delimeter.join(dynamo_record['mediaconvert_job_output_bucket'].split(delimeter)[2:3])
-    analysis_path = delimeter.join(dynamo_record['mediaconvert_job_output_bucket'].split(delimeter)[3:-1])+"/"
+    s3_bucket = delimeter.join(dynamo_record['mediaconvert_job_output_bucket']['S'].split(delimeter)[2:3])
+    analysis_path = delimeter.join(dynamo_record['mediaconvert_job_output_bucket']['S'].split(delimeter)[3:-1])+"/"
     s3_objects = get_s3_object_list(s3_client,s3_bucket,analysis_path)
 
     if(s3_objects is False):
