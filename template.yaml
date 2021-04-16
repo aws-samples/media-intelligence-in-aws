@@ -201,7 +201,7 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
                   - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
-  SimpleLambdaRole:
+  APILambdaRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -223,7 +223,6 @@ Resources:
               - Effect: Allow
                 Action:
                   - s3:GetObject
-                  - s3:PutObject
                 Resource:
                   - !Sub "arn:aws:s3:::${S3Bucket}/*"
                   - !Sub "arn:aws:s3:::${DestinationBucket}/*"
@@ -239,6 +238,18 @@ Resources:
                   - lambda:InvokeFunction
                 Resource:
                   - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*"
+  ####################
+  #         API      #
+  ####################
+  RestAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: RestAPI
+      StageName: Prod
+      Cors:
+        AllowOrigin: "'*'"
+        AllowMethods: "'GET,POST'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
   ####################
   # Lambda Functions #
   ####################
@@ -272,6 +283,34 @@ Resources:
       Environment:
         Variables:
           ANALYSIS_NAME: "SCENE_CLASSIFICATION"
+  VideoAnalysisFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api/start_analysis/
+      Runtime: nodejs14.x
+      Handler: index.handler
+      Role: !GetAtt APILambdaRole.Arn
+      Environment:
+        Variables:
+          START_ANALYSIS_FUNCTION: !Ref AudioFrameExtractor
+          GET_ANALYSIS_STATUS: "status_function"
+      Events:
+        StartVideoAnalysis:
+          Type: Api
+          Properties:
+            Path: /video_analysis
+            Method: POST
+            RestApiId: !Ref RestAPI
+        GetVideoAnalysisList:
+          Type: Api
+          Properties:
+            Path: /video_analysis
+            Method: GET
+        GetVideoAnalysisJob:
+          Type: Api
+          Properties:
+            Path: /video_analysis/{analysis_uuid}
+            Method: GET
   ####################
   #Lambda Permissions#
   ####################
@@ -398,3 +437,9 @@ Resources:
           Projection:
             ProjectionType: ALL
       TableName: !Ref DynamoDBTable
+#####################
+#       OUTPUTS     #
+#####################
+Outputs:
+  RestAPIUrl:
+    Value: !Sub "https://${RestAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod"

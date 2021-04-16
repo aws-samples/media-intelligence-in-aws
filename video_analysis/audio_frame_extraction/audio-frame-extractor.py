@@ -118,7 +118,7 @@ def build_media_convert_job_settings(s3_key,sample_rate = 1):
                 "S": file_name_no_extension
             }
         }
-        uuid_exists = dynamodb_helper.get_item(key, "#uuid_key = :val",{'#uuid_key':'uuid'})
+        uuid_exists = dynamodb_helper.get_item(key)
 
 
     destination_bucket_uri = "s3://"+destination_bucket+"/videos/analysis/"+uuid_string+"/"

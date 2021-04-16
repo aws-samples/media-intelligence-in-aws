@@ -3,6 +3,8 @@ from boto3 import client
 from json import dumps,loads
 from HelperLibrary.DynamoDBHelper.DynamoDBHelper import DynamoDBHelper
 from HelperLibrary.BaseHelper import BaseHelper
+from time import time
+
 
 region = environ['AWS_REGION']
 anylisis_name = environ['ANALYSIS_NAME']
@@ -36,17 +38,13 @@ def lambda_handler(event, context):
 
 
     # TODO
-    #   Get item from Dynamo
-    #   Get bucket for response
-    #   Update analysis status,
-    #   List bucket objects
     #   Save results per object
     #   Update analysis status
     #   Publish to sns completition
     dynamo_helper = DynamoDBHelper(environ['DYNAMODB_TABLE_NAME'], region)
     primary_key_structure = {
         "uuid": {
-            'S': sns_message_json["uuid"]
+            'S': sanitize_string(sns_message_json["uuid"])
         },
         "file_name": {
             'S': sns_message_json['file_name']
@@ -67,11 +65,32 @@ def lambda_handler(event, context):
     else:
         response['body']['dynamodb_scene_classification_update'] = False
 
+    # TODO
+    #  Handle DLQ
     if('item_offset' in sns_message_json):
         response["body"] = continue_scene_classification_job(dynamo_helper,dynamo_record,sns_message_json['item_offset'])
 
-    response["body"] = start_rekognition_label_job(dynamo_helper,dynamo_record)
+    start_time = time()
+    scene_classification_result = start_rekognition_label_job(dynamo_helper,dynamo_record)
+    end_time = time()
+    scene_classification_result['elapsed_time'] = str(end_time - start_time)
+    update_expression = ""
+    attributes_values = {}
 
+    if(scene_classification_result == False):
+        response['body']['msg'] = "Failed scene classification task, view logs for further information"
+        scene_classification_status = "ERROR"
+    else:
+        scene_classification_status = "COMPLETED"
+        update_expression, attributes_values = dynamo_helper.build_update_expression("scene_classification_results",
+                                                                                     dumps(scene_classification_result), "S",update_expression,attributes_values)
+
+    update_expression, attributes_values = dynamo_helper.build_update_expression("scene_classification_status",
+                                                                                 scene_classification_status, "S",update_expression,attributes_values)
+
+    write_to_dynamodb = dynamo_helper.update_dynamodb_item(primary_key_structure, update_expression, attributes_values)
+    if write_to_dynamodb is False:
+        print("Failed to update job status to DynamoDB")
 
     return response
 
@@ -102,11 +121,18 @@ def start_rekognition_label_job(dynamo_helper,dynamo_record,min_confidence=70,na
     if rekognition_client is False:
         raise Exception("Rekognition client creation failed")
 
-
     # TODO
     #   Store the results somewhere
     analysis_results = []
+    failed_frames = []
+    total_images = len(object_name_list)
+    current_frame = 0
+    primary_key_structure = {
+        "uuid": dynamo_record['uuid'],
+        "file_name": dynamo_record['file_name']
+    }
     for file_name in object_name_list:
+        start_time = time()
         try:
             job_response = rekognition_client.detect_labels(
                 Image={
@@ -120,16 +146,31 @@ def start_rekognition_label_job(dynamo_helper,dynamo_record,min_confidence=70,na
             )
         except Exception as e:
             print("Rekognition job creation exception on file: "+file_name+" \n", e)
-            return {"msg": "Rekognition job creation exception, review logs for more information"}
+            failed_frames.append({'frame_name':file_name,'reason':e})
         else:
+            end_time = time()
             result_base = {
                 "file":file_name,
-                "rekognition_detect_labels_result":job_response
+                "rekognition_detected_labels":job_response['Labels'],
+                "processing_time":end_time-start_time
             }
             analysis_results.append(result_base.copy())
 
+        progress = current_frame*100/total_images
+        update_expression, attributes_values = dynamo_helper.build_update_expression("scene_classification_progress",
+                                                                                     str(progress), "S")
+        updated_to_dynamodb = dynamo_helper.update_dynamodb_item(primary_key_structure, update_expression,
+                                                               attributes_values)
+
+        if(updated_to_dynamodb == False):
+            print("Error while updating progress to DynamoDB")
+
+        current_frame += 1
+
+
     response['msg'] = "Job completed for "+str(len(object_name_list))+" frames"
-    response["data"] = analysis_results
+    response["frames_result"] = analysis_results
+    response["frames_failed"] = failed_frames
 
     return response
 
@@ -188,6 +229,7 @@ def process_s3_object_list(s3_objects_list,name_identifier="_frame_"):
 def sanitize_string(string_variable):
     string_variable=string_variable.replace("\n","")
     string_variable = string_variable.replace("\"","")
+    string_variable = string_variable.replace("/","")
     string_variable = string_variable.replace("\'","")
     string_variable = string_variable.replace("\r","")
     string_variable = string_variable.replace(":","")
