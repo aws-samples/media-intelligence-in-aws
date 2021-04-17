@@ -288,7 +288,7 @@ Resources:
     Properties:
       CodeUri: api/start_analysis/
       Runtime: nodejs10.x
-      Handler: index.handler
+      Handler: main.handler
       Role: !GetAtt APILambdaRole.Arn
       Environment:
         Variables:
