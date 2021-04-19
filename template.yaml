@@ -246,10 +246,36 @@ Resources:
     Properties:
       Name: RestAPI
       StageName: Prod
+      Auth:
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !GetAtt APICognitoUserPool.Arn
       Cors:
         AllowOrigin: "'*'"
         AllowMethods: "'GET,POST'"
         AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+  ####################
+  # Cognito User Pool#
+  ####################
+  APICognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: "API Users"
+      Schema:
+        - Name: name
+          AttributeDataType: String
+          Mutable: false
+          Required: true
+        - Name: email
+          AttributeDataType: String
+          Mutable: false
+          Required: true
+  GloboAPIUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: "globo-api"
+      GenerateSecret: false
+      UserPoolId: !Ref APICognitoUserPool
   ####################
   # Lambda Functions #
   ####################
@@ -305,11 +331,13 @@ Resources:
           Properties:
             Path: /video_analysis
             Method: GET
+            RestApiId: !Ref RestAPI
         GetVideoAnalysisJob:
           Type: Api
           Properties:
             Path: /video_analysis/{analysis_uuid}
             Method: GET
+            RestApiId: !Ref RestAPI
   ####################
   #Lambda Permissions#
   ####################
@@ -436,6 +464,7 @@ Resources:
           Projection:
             ProjectionType: ALL
       TableName: !Ref DynamoDBTable
+
 #####################
 #       OUTPUTS     #
 #####################
