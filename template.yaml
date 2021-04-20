@@ -247,35 +247,11 @@ Resources:
       Name: RestAPI
       StageName: Prod
       Auth:
-        Authorizers:
-          CognitoAuthorizer:
-            UserPoolArn: !GetAtt APICognitoUserPool.Arn
+        ApiKeyRequired: true
       Cors:
         AllowOrigin: "'*'"
         AllowMethods: "'GET,POST'"
         AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-  ####################
-  # Cognito User Pool#
-  ####################
-  APICognitoUserPool:
-    Type: AWS::Cognito::UserPool
-    Properties:
-      UserPoolName: "API Users"
-      Schema:
-        - Name: name
-          AttributeDataType: String
-          Mutable: false
-          Required: true
-        - Name: email
-          AttributeDataType: String
-          Mutable: false
-          Required: true
-  GloboAPIUserPoolClient:
-    Type: AWS::Cognito::UserPoolClient
-    Properties:
-      ClientName: "globo-api"
-      GenerateSecret: false
-      UserPoolId: !Ref APICognitoUserPool
   ####################
   # Lambda Functions #
   ####################
@@ -326,18 +302,24 @@ Resources:
             Path: /video_analysis
             Method: POST
             RestApiId: !Ref RestAPI
+            Auth:
+              ApiKeyRequired: true
         GetVideoAnalysisList:
           Type: Api
           Properties:
             Path: /video_analysis
             Method: GET
             RestApiId: !Ref RestAPI
+            Auth:
+              ApiKeyRequired: true
         GetVideoAnalysisJob:
           Type: Api
           Properties:
             Path: /video_analysis/{analysis_uuid}
             Method: GET
             RestApiId: !Ref RestAPI
+            Auth:
+              ApiKeyRequired: true
   ####################
   #Lambda Permissions#
   ####################
