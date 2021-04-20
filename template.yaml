@@ -252,6 +252,17 @@ Resources:
         AllowOrigin: "'*'"
         AllowMethods: "'GET,POST'"
         AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+  RestAPIKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: !Sub "${AWS::StackName}-apikey"
+      Description: "Rest API Key V1"
+      Enabled: true
+      GenerateDistinctId: false
+      Value: "abcdefghijkl1234567890"
+      StageKeys:
+        - RestApiId: !Ref RestAPI
+          StageName: Prod
   ####################
   # Lambda Functions #
   ####################
