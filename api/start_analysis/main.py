@@ -85,7 +85,9 @@ def post_video_analysis(payload,response):
         return response
     else:
         response['body']['msg']  = "Video Analysis Job created succesfully"
-        response['body']['data']  = lambda_response['Payload'].read()
+        response_payload = loads(lambda_response['Payload'].read().decode())
+        print("Response payload: \n",response_payload)
+        response['body']['data']  = response_payload
 
     return response
 # /*

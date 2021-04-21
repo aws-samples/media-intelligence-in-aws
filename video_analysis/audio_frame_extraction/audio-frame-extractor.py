@@ -34,7 +34,8 @@ def lambda_handler(event, context):
         return response
 
     response["body"]["msg"] = "MediaConvert Job succesfully created"
-    response["body"]["job_id"] = job_id
+    response["body"]["mediaconvert_job_id"] = job_id
+    response["body"]["video_analysis_uuid"] = uuid_string
 
     file_name = (event["file_path"].split('/')[-1])
 
