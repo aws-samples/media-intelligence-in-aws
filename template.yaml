@@ -34,6 +34,7 @@ Globals:
         INPUT_BUCKET: !Ref S3Bucket
         RESULTS_BUCKET: !Ref DestinationBucket
         DYNAMODB_TABLE_NAME: !Ref DynamoDBTable
+        DYNAMODB_RESULTS_TABLE_NAME: !Sub "${DynamoDBTable}-analysis-results"
         ALL_ANALYSIS_NAME: "ALL_AVAILABLE"
 
 Resources:
@@ -457,6 +458,32 @@ Resources:
           Projection:
             ProjectionType: ALL
       TableName: !Ref DynamoDBTable
+  VideoAnalysisResultsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: "PAY_PER_REQUEST"
+      AttributeDefinitions:
+        - AttributeName: uuid_file_name
+          AttributeType: S
+        - AttributeName: uuid_job
+          AttributeType: S
+        - AttributeName: file_key
+          AttributeType: S
+      KeySchema:
+        - AttributeName: uuid_file_name
+          KeyType: HASH
+        - AttributeName: uuid_job
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: FileKeyIndex
+          KeySchema:
+            - AttributeName: file_key
+              KeyType: HASH
+            - AttributeName: uuid_job
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TableName: !Sub "${DynamoDBTable}-analysis-results"
 
 #####################
 #       OUTPUTS     #

@@ -1,6 +1,11 @@
 from os import environ
 from json import dumps,loads
+from re import compile
 import boto3
+
+VIDEO_ANALYSIS_PATTERN = compile('/video_analysis')
+VIDEO_ANALYSIS_UUID_PATTERN = compile('/video_analysis/[A-Za-z0-9-]*')
+
 
 REGION = environ['AWS_REGION']
 LAMBDA_FUNCTION_NAME = environ['START_ANALYSIS_FUNCTION']
@@ -22,18 +27,56 @@ def handler(event, context):
         }
     }
 
-    if(validate_params(event) is False):
-        response["statusCode"] = 400
-        response["body"]["msg"] = "Invalid request, validate all parameters are present."
-        return response
+    method = event['httpMethod']
+    path = event['path']
+    body = loads(event['body'])
 
+
+    if method == 'POST' and VIDEO_ANALYSIS_PATTERN.fullmatch(path):
+        response = post_video_analysis(body,response)
+    elif method == 'GET' and VIDEO_ANALYSIS_PATTERN.fullmatch(path):
+        response['body']['msg'] = "Video List"
+    elif method == 'GET' and VIDEO_ANALYSIS_UUID_PATTERN.fullmatch(path):
+        response['body']['msg'] = "Video Analysis UUID"
+    elif method is not 'GET' and method is not 'POST' :
+        response["statusCode"] = 405
+        response["body"][
+            "msg"] = "Method not supported."
+    else:
+        response["statusCode"] = 404
+        response["body"]["msg"] = "API Path not defined please validate you have the right resource path."
+
+
+    return response
+
+
+def validate_params(request):
+    if 'file_path' not in request :
+        print("Missing file_path on request")
+        return False
+
+    if 'analysis_list' not in request:
+        print("Missing analysis_list on request")
+        return False
+
+    if 'sample_rate' not in request :
+        print("Missing sample_rate on request")
+        return False
+
+    return True
+
+def post_video_analysis(payload,response):
+    if validate_params(payload) is False:
+        response["statusCode"] = 400
+        response["body"]["msg"] = "Invalid request for path /video_analysis and method POST, validate all parameters are present."
+        return response
 
     try:
         lambda_response = lambda_client.invoke(
             FunctionName=LAMBDA_FUNCTION_NAME,
             InvocationType='RequestResponse',
             LogType='Tail',
-            Payload= event
+            Payload= payload
         )
     except Exception as e:
         print("Exception occurred while invoking lambda \n",e)
@@ -44,24 +87,6 @@ def handler(event, context):
         response['body'] = lambda_response
 
     return response
-
-
-def validate_params(request):
-    if('s3_path' not in request):
-        print("Missing s3_path on request")
-        return False
-
-    if('analysis_list' not in request):
-        print("Missing analysis_list on request")
-        return False
-
-    if('sample_rate' not in request):
-        print("Missing sample_rate on request")
-        return False
-
-    return True
-
-
 # /*
 # * endpoint: { s3_path, analysis_list,sample_rate}
 # * endpoint: {uuid, status_job, outputbucket}
