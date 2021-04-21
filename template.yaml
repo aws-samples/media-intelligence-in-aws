@@ -202,6 +202,8 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
                   - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
+                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}-analysis-results"
+                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}-analysis-results/*"
   APILambdaRole:
     Type: AWS::IAM::Role
     Properties:

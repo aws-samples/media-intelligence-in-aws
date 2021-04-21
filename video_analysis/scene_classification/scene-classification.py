@@ -174,11 +174,11 @@ def start_rekognition_label_job(dynamo_helper,dynamo_record,min_confidence=70,na
                 print("Error while writing result progress to DynamoDB")
 
 
-        progress = current_frame*100/total_images
+        progress = int(current_frame*100/total_images)
         update_scene_classification_progress(dynamo_helper,primary_key_structure,progress)
         current_frame += 1
 
-    progress = current_frame * 100 / total_images
+    progress = int(current_frame * 100 / total_images)
     update_scene_classification_progress(dynamo_helper, primary_key_structure, progress)
     current_frame += 1
 

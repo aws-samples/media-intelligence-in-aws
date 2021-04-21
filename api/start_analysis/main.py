@@ -17,6 +17,7 @@ def handler(event, context):
     print("Processing event:\n"+dumps(event))
 
     response = {
+        'isBase64Encoded':False,
         'headers': {
             'Access-Control-Allow-Origin': '*'
         },
@@ -31,6 +32,7 @@ def handler(event, context):
     path = event['path']
     body = loads(event['body'])
 
+    print("Request Body: \n",body)
 
     if method == 'POST' and VIDEO_ANALYSIS_PATTERN.fullmatch(path):
         response = post_video_analysis(body,response)
@@ -46,17 +48,15 @@ def handler(event, context):
         response["statusCode"] = 404
         response["body"]["msg"] = "API Path not defined please validate you have the right resource path."
 
-
     return response
-
 
 def validate_params(request):
     if 'file_path' not in request :
         print("Missing file_path on request")
         return False
 
-    if 'analysis_list' not in request:
-        print("Missing analysis_list on request")
+    if 'video_analysis_list' not in request:
+        print("Missing video_analysis_list on request")
         return False
 
     if 'sample_rate' not in request :
@@ -76,7 +76,7 @@ def post_video_analysis(payload,response):
             FunctionName=LAMBDA_FUNCTION_NAME,
             InvocationType='RequestResponse',
             LogType='Tail',
-            Payload= payload
+            Payload= dumps(payload)
         )
     except Exception as e:
         print("Exception occurred while invoking lambda \n",e)
@@ -84,7 +84,8 @@ def post_video_analysis(payload,response):
         response["body"]["msg"] = "Exception occured while invoking lambda function."
         return response
     else:
-        response['body'] = lambda_response
+        response['body']['msg']  = "Video Analysis Job created succesfully"
+        response['body']['data']  = lambda_response['Payload'].read()
 
     return response
 # /*
