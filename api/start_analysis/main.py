@@ -1,6 +1,8 @@
 from os import environ
 from json import dumps,loads
 from re import compile
+from HelperLibrary.DynamoDBHelper.DynamoDBHelper import DynamoDBHelper
+
 import boto3
 
 VIDEO_ANALYSIS_PATTERN = compile('/video_analysis')
@@ -30,16 +32,15 @@ def handler(event, context):
 
     method = event['httpMethod']
     path = event['path']
-    body = loads(event['body'])
-
-    print("Request Body: \n",body)
-
     if method == 'POST' and VIDEO_ANALYSIS_PATTERN.fullmatch(path):
+        body = loads(event['body'])
+        print("Request Body: \n", body)
         response = post_video_analysis(body,response)
     elif method == 'GET' and VIDEO_ANALYSIS_PATTERN.fullmatch(path):
         response['body']['msg'] = "Video List"
     elif method == 'GET' and VIDEO_ANALYSIS_UUID_PATTERN.fullmatch(path):
-        response['body']['msg'] = "Video Analysis UUID"
+        payload = dict(event['pathParameters'].items() | event['queryStringParameters'].items())
+        response['body'] = get_video_analysis_by_uuid(payload,response)
     elif method is not 'GET' and method is not 'POST' :
         response["statusCode"] = 405
         response["body"][
@@ -50,7 +51,7 @@ def handler(event, context):
 
     return response
 
-def validate_params(request):
+def validate_post_params(request):
     if 'file_path' not in request :
         print("Missing file_path on request")
         return False
@@ -65,10 +66,24 @@ def validate_params(request):
 
     return True
 
+def validate_get_by_uuid_params(request):
+    if 'file_name' not in request:
+        print("Missing file_name on request")
+        return False
+
+    if 'analysis_uuid' not in request:
+        print("Missing analysis_uuid on path")
+        return False
+
+    return True
+
 def post_video_analysis(payload,response):
-    if validate_params(payload) is False:
+    response_body = {}
+    if validate_post_params(payload) is False:
         response["statusCode"] = 400
-        response["body"]["msg"] = "Invalid request for path /video_analysis and method POST, validate all parameters are present."
+        response_body["msg"] = "Invalid request for path /video_analysis and method POST, validate " \
+                                  "all parameters are present."
+        response['body'] = dumps(response_body)
         return response
 
     try:
@@ -81,18 +96,52 @@ def post_video_analysis(payload,response):
     except Exception as e:
         print("Exception occurred while invoking lambda \n",e)
         response["statusCode"] = 500
-        response["body"]["msg"] = "Exception occured while invoking lambda function."
+        response_body["msg"] = "Exception occured while invoking lambda function."
+        response['body'] = dumps(response_body)
         return response
     else:
-        response['body']['msg']  = "Video Analysis Job created succesfully"
+        response_body["msg"] = "Video Analysis Job created succesfully"
         response_payload = loads(lambda_response['Payload'].read().decode())
         print("Response payload: \n",response_payload)
-        response['body']['data']  = response_payload
+        response_body['data']  = response_payload['body']
+        delimeter = '/'
+        file_name = (payload['file_path'].split(delimeter)[-1])
+        file_name_no_extension = file_name.split('.')[-2]
+        response_body['data']['file_name']  = file_name_no_extension
+        response["statusCode"] = response_payload['statusCode']
+        response['body'] = dumps(response_body)
 
     return response
-# /*
-# * endpoint: { s3_path, analysis_list,sample_rate}
-# * endpoint: {uuid, status_job, outputbucket}
-# * endpoint: {uuid, status_for_each_analysis}
-# * policies for each lambda
-# * */
+
+def get_video_analysis_by_uuid(payload,response):
+    response_body = {}
+    if validate_get_by_uuid_params(payload) is False:
+        response["statusCode"] = 400
+        response_body["msg"] = "Invalid request for path /video_analysis/{uuid} and method POST, " \
+                                  "validate all parameters are present."
+        response['body'] = dumps(response_body)
+        return response
+
+    uuid = payload['analysis_uuid']
+    file_name = payload['file_name']
+    dynamodb_helper = DynamoDBHelper(environ['DYNAMODB_TABLE_NAME'],REGION)
+    primary_key = {
+        "uuid": {
+            "S": uuid
+        },
+        "file_name": {
+            "S": file_name
+        }
+    }
+
+    dynamo_response = dynamodb_helper.get_item(primary_key)
+    if dynamo_response is False:
+        response["statusCode"] = 404
+        response_body["msg"] = "Video Analysis UUID not found"
+        response['body'] = dumps(response_body)
+    else:
+        response_body["data"] = dynamo_response
+        response_body["msg"] = "Video Analysis UUID results"
+        response['body'] = dumps(response_body)
+
+    return response

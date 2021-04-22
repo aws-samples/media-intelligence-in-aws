@@ -241,6 +241,16 @@ Resources:
                   - lambda:InvokeFunction
                 Resource:
                   - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*"
+              - Effect: Allow
+                Action:
+                  - dynamodb:Get*
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource:
+                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
+                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
+                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}-analysis-results"
+                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}-analysis-results/*"
   ####################
   #         API      #
   ####################
