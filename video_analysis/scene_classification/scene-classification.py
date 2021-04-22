@@ -1,7 +1,7 @@
 from os import environ
 from json import dumps,loads
-from HelperLibrary.DynamoDBHelper.DynamoDBHelper import DynamoDBHelper
-from HelperLibrary.BaseHelper import BaseHelper
+from DynamoDBHelper import DynamoDBHelper
+from BaseHelper import BaseHelper
 from time import time
 
 

@@ -2,7 +2,7 @@ from os import environ
 from boto3 import client
 from json import dumps
 from time import time
-from HelperLibrary.DynamoDBHelper.DynamoDBHelper import DynamoDBHelper
+from DynamoDBHelper import DynamoDBHelper
 import uuid
 
 mediaconvert_role = environ['MEDIACONVERT_ROLE']
