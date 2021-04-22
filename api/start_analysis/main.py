@@ -40,7 +40,7 @@ def handler(event, context):
         response['body']['msg'] = "Video List"
     elif method == 'GET' and VIDEO_ANALYSIS_UUID_PATTERN.fullmatch(path):
         payload = dict(event['pathParameters'].items() | event['queryStringParameters'].items())
-        response['body'] = get_video_analysis_by_uuid(payload,response)
+        response = get_video_analysis_by_uuid(payload,response)
     elif method is not 'GET' and method is not 'POST' :
         response["statusCode"] = 405
         response["body"][
@@ -48,6 +48,8 @@ def handler(event, context):
     else:
         response["statusCode"] = 404
         response["body"]["msg"] = "API Path not defined please validate you have the right resource path."
+
+    print("Response: \n", response)
 
     return response
 
@@ -109,6 +111,7 @@ def post_video_analysis(payload,response):
         file_name_no_extension = file_name.split('.')[-2]
         response_body['data']['file_name']  = file_name_no_extension
         response["statusCode"] = response_payload['statusCode']
+        print("response_body:\n",response_body)
         response['body'] = dumps(response_body)
 
     return response
@@ -138,10 +141,12 @@ def get_video_analysis_by_uuid(payload,response):
     if dynamo_response is False:
         response["statusCode"] = 404
         response_body["msg"] = "Video Analysis UUID not found"
+        print("response_body:\n",response_body)
         response['body'] = dumps(response_body)
     else:
         response_body["data"] = dynamo_response
         response_body["msg"] = "Video Analysis UUID results"
+        print("response_body:\n",response_body)
         response['body'] = dumps(response_body)
 
     return response
