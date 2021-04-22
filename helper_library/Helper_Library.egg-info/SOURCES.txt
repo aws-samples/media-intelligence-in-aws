@@ -1,9 +1,0 @@
-README.md
-setup.py
-Helper_Library.egg-info/PKG-INFO
-Helper_Library.egg-info/SOURCES.txt
-Helper_Library.egg-info/dependency_links.txt
-Helper_Library.egg-info/requires.txt
-Helper_Library.egg-info/top_level.txt
-python/__init__.py
-python/lib/__init__.py
