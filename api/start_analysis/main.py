@@ -1,9 +1,9 @@
+from json import dumps, loads
 from os import environ
-from json import dumps,loads
 from re import compile
-from HelperLibrary.DynamoDBHelper.DynamoDBHelper import DynamoDBHelper
 
 import boto3
+from DynamoDBHelper import DynamoDBHelper
 
 VIDEO_ANALYSIS_PATTERN = compile('/video_analysis')
 VIDEO_ANALYSIS_UUID_PATTERN = compile('/video_analysis/[A-Za-z0-9-]*')
