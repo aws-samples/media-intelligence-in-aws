@@ -276,6 +276,26 @@ Resources:
       StageKeys:
         - RestApiId: !Ref RestAPI
           StageName: Prod
+  APIKeyUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      ApiStages:
+        - ApiId: !Ref RestAPI
+          Stage: Prod
+      Description: Customer usage plan
+      Quota:
+        Limit: 5000
+        Period: MONTH
+      Throttle:
+        BurstLimit: 200
+        RateLimit: 100
+      UsagePlanName: !Sub "${AWS::StackName}-usage-plan"
+  UsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref RestAPIKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref APIKeyUsagePlan
   ####################
   # Lambda Functions #
   ####################
