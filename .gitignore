@@ -1,7 +1,6 @@
 .idea/
 .aws-sam/
 samples/
-y
 expression-attributes.json
 .DS_STORE
 .vscode

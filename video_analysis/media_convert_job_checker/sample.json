@@ -1,0 +1,22 @@
+{
+  "Records": [
+    {
+      "EventSource": "aws:sns",
+      "EventVersion": "1.0",
+      "EventSubscriptionArn": "arn:aws:sns:us-east-1:728516303426:MediaConvertJobStatus:2b991a6e-3120-4f5a-8e6d-eeda0fd44414",
+      "Sns": {
+        "Type": "Notification",
+        "MessageId": "e6d4da00-ea50-54c3-a93a-82f08034947a",
+        "TopicArn": "arn:aws:sns:us-east-1:728516303426:MediaConvertJobStatus",
+        "Subject": null,
+        "Message": "\"job_id:1620170531800-m837xs\"\n",
+        "Timestamp": "2021-04-14T03:57:24.150Z",
+        "SignatureVersion": "1",
+        "Signature": "o7dhFNwHnT2w66Kc9L0H945NxotalJVYHDDWAqMGJ0sstpwIofWgR4M3r51PLFc37+1GHB3G9jVMJQvMtsxHpGm4AoEqYnR744JMFt4Zg7kYj9mwpmZig4Xq8KcV2N9Fq3YuHff9xygSeBxPFEk4scV5HOcK9my13XeHqSS0LMJ+UhiadS/z4Yvgw6czosXn8SFcBltswx5RtRXESzAPVJ1yuwYaEXQemP4ElPkBzBJC6OStWkTBUiHA712QbEDJp+0SjQkEZsFIeOHgDvYP39FbhmB91ucVHjfMSt9YgUrTmi3Uqfx73HkM2cCIKY3Rl5TkCFjhxmTZX9mqPE31MA==",
+        "SigningCertUrl": "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-010a507c1833636cd94bdb98bd93083a.pem",
+        "UnsubscribeUrl": "https://sns.us-east-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-east-1:728516303426:MediaConvertJobStatus:2b991a6e-3120-4f5a-8e6d-eeda0fd44414",
+        "MessageAttributes": {}
+      }
+    }
+  ]
+}

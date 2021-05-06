@@ -1,4 +1,5 @@
 from boto3 import client
+import time
 
 class AudioFrameExtractor:
     def __init__(self, role_arn, destination_bucket):
@@ -14,12 +15,12 @@ class AudioFrameExtractor:
         self.mediaconvert = client('mediaconvert', endpoint_url=endpoint)
         
 
-    def start_mediaconvert_job(self, S3Key, SampleRate):
+    def start_mediaconvert_job(self, S3Key, SampleRate=1, Timestamp=time.time()):
         # settings = self._build_media_convert_job_settings(S3Key, SampleRate)
         try:
             job_response = self.mediaconvert.create_job(
                 Role=self.role,
-                Settings=self._build_media_convert_job_settings(S3Key, SampleRate)
+                Settings=self._build_media_convert_job_settings(S3Key, Timestamp, SampleRate),
             )
             return job_response['Job']['Id']
         except Exception as e:
@@ -44,7 +45,7 @@ class AudioFrameExtractor:
         return numerator, denominator
 
 
-    def _build_media_convert_job_settings(self, S3Key, SampleRate = 1):
+    def _build_media_convert_job_settings(self, S3Key, Timestamp, SampleRate):
         file_name = (S3Key.split('/')[-1])
         # file_name_no_extension = file_name.split('.')[-2]
         destination_bucket_uri = f's3://{self.destination_bucket}/videos/analysis/'
@@ -194,7 +195,12 @@ class AudioFrameExtractor:
             "OutputGroupSettings": {
                 "Type": "FILE_GROUP_SETTINGS",
                 "FileGroupSettings": {
-                    "Destination": f'{destination_bucket_uri}/{file_name}/{SampleRate}/{timestamp}/'
+                    "Destination": '{}/{}/{}/{}/'.format(
+                        destination_bucket_uri,
+                        file_name,
+                        SampleRate,
+                        Timestamp
+                    )
                 }
             }
         }

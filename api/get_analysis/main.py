@@ -3,8 +3,7 @@ from json import dumps,loads
 from boto3 import resource
 from boto3.dynamodb.conditions import Key
 
-DDB = resource('dynamodb')
-TABLE = DDB.Table(environ['DDB_TABLE'])
+TABLE = resource('dynamodb').Table(environ['DDB_TABLE'])
 
 RESPONSE_PATTERN = {
     'isBase64Encoded':False,
@@ -33,7 +32,7 @@ def get_video_analysis_by_uuid(uuid, s3_key):
     dynamo_response = TABLE.get_item(Key=primary_key)
     dynamo_response = TABLE.query(
         KeyConditionExpression = 
-            Key('S3_KEY').eq(primary_key['S3_KEY']) & Key('ATTR_TYPE').begins_with('ana')
+            Key('S3_KEY').eq(primary_key['S3_KEY']) & Key('ATTR_TYPE').between('ana/0000000/0','ana/zzzzzzzz/100')
     )
 
     print(dynamo_response['Items'])

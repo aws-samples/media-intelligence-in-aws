@@ -1,6 +1,6 @@
 from os import environ
 from boto3 import client, resource
-from json import load, dumps
+from json import load, dumps, loads
 from fuzzyset import FuzzySet
 from os import environ
 from time import sleep
@@ -13,12 +13,15 @@ def lambda_handler(event, context):
     with open('brands.json') as brands_file:
         brand_set = FuzzySet(load(brands_file))
     
+    message = loads(
+        event['Records'][0]['Sns']['Message']
+    )
     print('Starting text extraction ..')
     detection = REKOGNITION.start_text_detection(
         Video={
             'S3Object': {
                 'Bucket': environ['IN_S3_BUCKET'],
-                'Name': event['S3Key'] 
+                'Name': message['S3Key'] 
             }
         }
     )
@@ -57,15 +60,15 @@ def lambda_handler(event, context):
                 
             if detection['Timestamp'] != curr_timestamp:
                 batch.put_item(Item={
-                    'S3Key': event['S3Key'],
+                    'S3Key': message['S3Key'],
                     'AttrType': 'ana/bft/{Timestamp}'.format(Timestamp=curr_timestamp),
-                    'JobId': event['JobId'],
+                    'JobId': message['JobId'],
                     'DetectedLabels': dumps(frames)
                 })
                 print ({
-                    'S3Key': event['S3Key'],
+                    'S3Key': message['S3Key'],
                     'AttrType': 'ana/bft/{Timestamp}'.format(Timestamp=curr_timestamp),
-                    'JobId': event['JobId'],
+                    'JobId': message['JobId'],
                     'DetectedLabels': dumps(frames)
                 })
                 frames = []
@@ -78,14 +81,14 @@ def lambda_handler(event, context):
             })
 
         batch.put_item(Item={
-            'S3Key': event['S3Key'],
+            'S3Key': message['S3Key'],
             'AttrType': 'ana/bft/{Timestamp}'.format(Timestamp=curr_timestamp),
-            'JobId': event['JobId'],
+            'JobId': message['JobId'],
             'DetectedLabels': dumps(frames)
         })
         print ({
-            'S3Key': event['S3Key'],
+            'S3Key': message['S3Key'],
             'AttrType': 'ana/bft/{Timestamp}'.format(Timestamp=curr_timestamp),
-            'JobId': event['JobId'],
+            'JobId': message['JobId'],
             'DetectedLabels': dumps(frames)
         })

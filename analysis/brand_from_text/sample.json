@@ -1,8 +1,8 @@
 {
   "S3Key": "videos/360p-amor-de-m-e.mp4",
   "SampleRate": 3,
-  "Analysis": [
-    "AllAvailable"
+  "analysis": [
+    "all"
   ],
   "IgnoreExtract": false,
   "JobId": "testJobIdMessage"

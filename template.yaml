@@ -16,26 +16,20 @@ Parameters:
     Type: String
     Description: Amazon S3 bucket to bulk frames and audio outputs
     Default: "globo-dev"
-  DynamoDBTable:
-    Type: String
-    Description: Amazon S3 bucket to bulk frames and audio outputs
-    Default: 'globo-dpp-dynamo'
 
 Globals:
   Function:
-    Runtime: python3.8
+    Runtime: python3.7
     Handler: app.lambda_handler
     Timeout: 300
     MemorySize: 1024
     Layers:
-      - !Ref HelperLibrary
-    Environment:
-      Variables:
-        INPUT_BUCKET: !Ref S3Bucket
-        RESULTS_BUCKET: !Ref DestinationBucket
-        DYNAMODB_TABLE_NAME: !Ref DynamoDBTable
-        DYNAMODB_RESULTS_TABLE_NAME: !Sub "${DynamoDBTable}-analysis-results"
-        ALL_ANALYSIS_NAME: "ALL_AVAILABLE"
+      - !Ref Shared
+    # Environment:
+    #   Variables:
+    #     INPUT_BUCKET: !Ref S3Bucket
+    #     RESULTS_BUCKET: !Ref DestinationBucket
+    #     ALL_ANALYSIS_NAME: "ALL_AVAILABLE"
 
 Resources:
   #############
@@ -128,8 +122,8 @@ Resources:
                   - dynamodb:PutItem
                   - dynamodb:UpdateItem
                 Resource:
-                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
-                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
+                  - "arn:aws:dynamodb:*:*:table/globo-jobs"
+                  - "arn:aws:dynamodb:*:*:table/globo-jobs/*"
               - Effect: Allow
                 Action:
                   - sns:Publish
@@ -200,10 +194,8 @@ Resources:
                   - dynamodb:PutItem
                   - dynamodb:UpdateItem
                 Resource:
-                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
-                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
-                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}-analysis-results"
-                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}-analysis-results/*"
+                  - "arn:aws:dynamodb:*:*:table/globo-jobs"
+                  - "arn:aws:dynamodb:*:*:table/globo-jobs/*"
   APILambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -247,55 +239,85 @@ Resources:
                   - dynamodb:Query
                   - dynamodb:Scan
                 Resource:
-                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
-                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
-                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}-analysis-results"
-                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}-analysis-results/*"
+                  - "arn:aws:dynamodb:*:*:table/globo-jobs"
+                  - "arn:aws:dynamodb:*:*:table/globo-jobs/*"
+  ResultsTable:  
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      TableName: globo-jobs
+      AttributeDefinitions: 
+        - AttributeName: S3Key
+          AttributeType: S
+        - AttributeName: AttrType
+          AttributeType: S
+        - AttributeName: JobId
+          AttributeType: S
+      KeySchema: 
+        - AttributeName: S3Key
+          KeyType: HASH
+        - AttributeName: AttrType
+          KeyType: RANGE
+      LocalSecondaryIndexes:
+        - IndexName: JobIdIndex
+          KeySchema:
+            - AttributeName: S3Key
+              KeyType: HASH
+            - AttributeName: JobId
+              KeyType: RANGE
+          Projection:
+            NonKeyAttributes:
+              - analysis
+            ProjectionType: INCLUDE
+      BillingMode: PAY_PER_REQUEST
+      Tags: 
+        - Key: cost
+          Value: aws-ee
+  
   ####################
-  #         API      #
+  #        API       #
   ####################
-  RestAPI:
-    Type: AWS::Serverless::Api
-    Properties:
-      Name: RestAPI
-      StageName: Prod
-      Auth:
-        ApiKeyRequired: true
-      Cors:
-        AllowOrigin: "'*'"
-        AllowMethods: "'GET,POST'"
-        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-  RestAPIKey:
-    Type: AWS::ApiGateway::ApiKey
-    Properties:
-      Name: !Sub "${AWS::StackName}-apikey"
-      Description: "Rest API Key V1"
-      Enabled: true
-      GenerateDistinctId: false
-      Value: "abcdefghijkl1234567890"
-      StageKeys:
-        - RestApiId: !Ref RestAPI
-          StageName: Prod
-  APIKeyUsagePlan:
-    Type: AWS::ApiGateway::UsagePlan
-    Properties:
-      ApiStages:
-        - ApiId: !Ref RestAPI
-          Stage: Prod
-      Description: Customer usage plan
-      Quota:
-        Limit: 5000
-        Period: MONTH
-      Throttle:
-        BurstLimit: 200
-        RateLimit: 100
-      UsagePlanName: !Sub "${AWS::StackName}-usage-plan"
-  UsagePlanKey:
-    Type: AWS::ApiGateway::UsagePlanKey
-    Properties:
-      KeyId: !Ref RestAPIKey
-      KeyType: API_KEY
-      UsagePlanId: !Ref APIKeyUsagePlan
+  # RestAPI:
+  #   Type: AWS::Serverless::Api
+  #   Properties:
+  #     Name: RestAPI
+  #     StageName: Prod
+  #     # Auth:
+  #     #   ApiKeyRequired: true
+  #     Cors:
+  #       AllowOrigin: "'*'"
+  #       AllowMethods: "'GET,POST'"
+  #       AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+  # RestAPIKey:
+  #   Type: AWS::ApiGateway::ApiKey
+  #   Properties:
+  #     Name: !Sub "${AWS::StackName}-apikey"
+  #     Description: "Rest API Key V1"
+  #     Enabled: true
+  #     GenerateDistinctId: false
+  #     # Value: "abcdefghijkl1234567890"
+      # StageKeys:
+      #   - RestApiId: !Ref RestAPI
+      #     StageName: Prod
+  # APIKeyUsagePlan:
+  #   Type: AWS::ApiGateway::UsagePlan
+  #   Properties:
+  #     ApiStages:
+  #       - ApiId: !Ref RestAPI
+  #         Stage: Prod
+  #     Description: Customer usage plan
+  #     Quota:
+  #       Limit: 5000
+  #       Period: MONTH
+  #     Throttle:
+  #       BurstLimit: 200
+  #       RateLimit: 100
+  #     UsagePlanName: !Sub "${AWS::StackName}-usage-plan"
+  # UsagePlanKey:
+  #   Type: AWS::ApiGateway::UsagePlanKey
+  #   Properties:
+  #     KeyId: !Ref RestAPIKey
+  #     KeyType: API_KEY
+  #     UsagePlanId: !Ref APIKeyUsagePlan
   ####################
   # Lambda Functions #
   ####################
@@ -318,52 +340,98 @@ Resources:
       Environment:
         Variables:
           SNS_TOPIC: !Ref VideoAnalysisTopic
+          SNS_TOPIC_TEST: arn:aws:sns:us-east-1:728516303426:VidAnalysisTopic
           MC_JOB_INDEX_NAME: "MediaConvertJobIndex"
+          IN_S3_BUCKET: !Ref S3Bucket
+          DDB_TABLE: !Ref ResultsTable
   SceneClassification:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: video_analysis/scene_classification/
+      CodeUri: analysis/scene_classification/
       Handler: scene-classification.lambda_handler
       Role: !GetAtt LambdaRekognitionRole.Arn
       Timeout: 900
       Environment:
         Variables:
           ANALYSIS_NAME: "SCENE_CLASSIFICATION"
-  VideoAnalysisFunction:
+  GetAnalysisFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: api/start_analysis/
-      Handler: main.handler
+      CodeUri: api/get_analysis/
+      Handler: main.lambda_handler
       Role: !GetAtt APILambdaRole.Arn
       Environment:
         Variables:
-          START_ANALYSIS_FUNCTION: !Ref AudioFrameExtractor
-          GET_ANALYSIS_STATUS: "status_function"
-      Events:
-        StartVideoAnalysis:
-          Type: Api
-          Properties:
-            Path: /video_analysis
-            Method: POST
-            RestApiId: !Ref RestAPI
-            Auth:
-              ApiKeyRequired: true
-        GetVideoAnalysisList:
-          Type: Api
-          Properties:
-            Path: /video_analysis
-            Method: GET
-            RestApiId: !Ref RestAPI
-            Auth:
-              ApiKeyRequired: true
-        GetVideoAnalysisJob:
-          Type: Api
-          Properties:
-            Path: /video_analysis/{analysis_uuid}
-            Method: GET
-            RestApiId: !Ref RestAPI
-            Auth:
-              ApiKeyRequired: true
+          DDB_TABLE: !Ref ResultsTable
+  StartAnalysisFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api/start_analysis/
+      Handler: main.lambda_handler
+      Role: !GetAtt LambdaMediaConvertRole.Arn
+      Environment:
+        Variables:
+          DDB_TABLE: !Ref ResultsTable
+          MEDIA_CONVERT_ARN: !GetAtt MediaConvertS3Role.Arn
+          DEST_S3_BUCKET: !Ref DestinationBucket
+          IN_S3_BUCKET: !Ref S3Bucket
+      # Events:
+      #   StartVideoAnalysis:
+      #     Type: Api
+      #     Properties:
+      #       Path: /video_analysis
+      #       Method: POST
+      #       RestApiId: !Ref RestAPI
+      #       Auth:
+      #         ApiKeyRequired: true
+      #   GetVideoAnalysisList:
+      #     Type: Api
+      #     Properties:
+      #       Path: /video_analysis
+      #       Method: GET
+      #       RestApiId: !Ref RestAPI
+      #       Auth:
+      #         ApiKeyRequired: true
+      #   GetVideoAnalysisJob:
+      #     Type: Api
+      #     Properties:
+      #       Path: /video_analysis/{analysis_uuid}
+      #       Method: GET
+      #       RestApiId: !Ref RestAPI
+      #       Auth:
+      #         ApiKeyRequired: true
+  
+  # Analysis Functions
+  BrandFromTextAnalysis:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: analysis/brand_from_text/
+      Handler: bft.lambda_handler
+      Environment:
+        Variables:
+          DDB_TABLE: !Ref ResultsTable
+          IN_S3_BUCKET: globo-data-copy
+          DEST_S3_BUCKET: globo-dev
+          SIM_THRESHOLD: 0.7
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - rekognition:*
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - dynamodb:*
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - sns:Publish
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - s3:*
+              Resource: "*"
   ####################
   #Lambda Permissions#
   ####################
@@ -381,17 +449,24 @@ Resources:
       Principal: "sns.amazonaws.com"
       SourceArn: !Ref VideoAnalysisTopic
       FunctionName: !GetAtt SceneClassification.Arn
+  BrandFromTextLambdaInvokePermissions:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: "lambda:InvokeFunction"
+      Principal: "sns.amazonaws.com"
+      SourceArn: !Ref VideoAnalysisTopic
+      FunctionName: !GetAtt BrandFromTextAnalysis.Arn
   #####################
   #Lambda Custom Layer#
   #####################
-  HelperLibrary:
+  Shared:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      LayerName: "HelperLibrary"
-      Description: "Library of different reusable helpers"
-      ContentUri: helper_library/
+      LayerName: "AnalysisSaver"
+      Description: "Library to save results from analysis to DynamoDB and ElastiSearch"
+      ContentUri: shared/
       CompatibleRuntimes:
-        - python3.8
+        - python3.7
       RetentionPolicy: Delete
   ####################
   #    SNS Topics    #
@@ -403,7 +478,7 @@ Resources:
         - Endpoint:
             !GetAtt MediaConvertJobChecker.Arn
           Protocol: "lambda"
-      TopicName: "MediaConvertJobStatus"
+      TopicName: "MCJobStatus"
   VideoAnalysisTopic:
     Type: AWS::SNS::Topic
     Properties:
@@ -411,7 +486,29 @@ Resources:
         - Endpoint:
             !GetAtt SceneClassification.Arn
           Protocol: "lambda"
-      TopicName: "VideoAnalysisTopic"
+      TopicName: "VidAnalysisTopic"
+  bftSub:
+    Type: AWS::SNS::Subscription
+    Properties: 
+      Endpoint: !GetAtt BrandFromTextAnalysis.Arn
+      Protocol: lambda
+      FilterPolicy: '{"analysis": ["all", "bft"]}'
+      TopicArn: !Ref VideoAnalysisTopic
+  testSub:
+    Type: AWS::SNS::Subscription
+    Properties: 
+      Endpoint: !Ref Email
+      Protocol: email
+      FilterPolicy: '{"analysis": ["all", "bft"]}'
+      TopicArn: !Ref VideoAnalysisTopic
+  EmailTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: NotificationTopic
+      Subscription:
+        - Endpoint: !Ref Email
+          Protocol: email
+
   ################
   # IAM Policies #
   ################
@@ -452,75 +549,9 @@ Resources:
               job_id: "$.detail.jobId"
             InputTemplate: |
               "job_id:<job_id>"
-  ####################
-  #  DynamoDB Table  #
-  ####################
-  VideoAnalysisTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      BillingMode: "PAY_PER_REQUEST"
-      AttributeDefinitions:
-        - AttributeName: uuid
-          AttributeType: S
-        - AttributeName: mediaconvert_job_id
-          AttributeType: S
-        - AttributeName: file_name
-          AttributeType: S
-        - AttributeName: creation_timestamp
-          AttributeType: S
-      KeySchema:
-        - AttributeName: uuid
-          KeyType: HASH
-        - AttributeName: file_name
-          KeyType: RANGE
-      GlobalSecondaryIndexes:
-        - IndexName: MediaConvertJobIndex
-          KeySchema:
-            - AttributeName: mediaconvert_job_id
-              KeyType: HASH
-            - AttributeName: uuid
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-        - IndexName: TimeStampIndex
-          KeySchema:
-            - AttributeName: creation_timestamp
-              KeyType: HASH
-            - AttributeName: uuid
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-      TableName: !Ref DynamoDBTable
-  VideoAnalysisResultsTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      BillingMode: "PAY_PER_REQUEST"
-      AttributeDefinitions:
-        - AttributeName: uuid_file_name
-          AttributeType: S
-        - AttributeName: uuid_job
-          AttributeType: S
-        - AttributeName: file_key
-          AttributeType: S
-      KeySchema:
-        - AttributeName: uuid_file_name
-          KeyType: HASH
-        - AttributeName: uuid_job
-          KeyType: RANGE
-      GlobalSecondaryIndexes:
-        - IndexName: FileKeyIndex
-          KeySchema:
-            - AttributeName: file_key
-              KeyType: HASH
-            - AttributeName: uuid_job
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-      TableName: !Sub "${DynamoDBTable}-analysis-results"
-
 #####################
 #       OUTPUTS     #
 #####################
-Outputs:
-  RestAPIUrl:
-    Value: !Sub "https://${RestAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+# Outputs:
+#   RestAPIUrl:
+#     Value: !Sub "https://${RestAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod"
