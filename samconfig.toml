@@ -6,6 +6,6 @@ stack_name = "globo"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-qwmxecpzgogx"
 s3_prefix = "globo"
 region = "us-east-1"
-profile = "globo"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Email=\"pedrospspl@gmail.com\" S3Bucket=\"globo-data-copy\" DestinationBucket=\"globo-dev\""
+parameter_overrides = "Email=\"arbahena@amazon.com\" S3Bucket=\"globo-data-copy\" DestinationBucket=\"globo-dev\" DynamoDBTable=\"globo-jobs\""
+confirm_changeset = true
