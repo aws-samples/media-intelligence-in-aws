@@ -61,13 +61,13 @@ def lambda_handler(event, context):
             if detection['Timestamp'] != curr_timestamp:
                 batch.put_item(Item={
                     'S3Key': message['S3Key'],
-                    'AttrType': 'ana/bft/{Timestamp}'.format(Timestamp=curr_timestamp),
+                    'AttrType': 'ana/bft/'+str(message['SampleRate'])+'/{Timestamp}'.format(Timestamp=curr_timestamp),
                     'JobId': message['JobId'],
                     'DetectedLabels': dumps(frames)
                 })
                 print ({
                     'S3Key': message['S3Key'],
-                    'AttrType': 'ana/bft/{Timestamp}'.format(Timestamp=curr_timestamp),
+                    'AttrType': 'ana/bft/'+str(message['SampleRate'])+'/{Timestamp}'.format(Timestamp=curr_timestamp),
                     'JobId': message['JobId'],
                     'DetectedLabels': dumps(frames)
                 })
@@ -82,13 +82,13 @@ def lambda_handler(event, context):
 
         batch.put_item(Item={
             'S3Key': message['S3Key'],
-            'AttrType': 'ana/bft/{Timestamp}'.format(Timestamp=curr_timestamp),
+            'AttrType': 'ana/bft/'+str(message['SampleRate'])+'/{Timestamp}'.format(Timestamp=curr_timestamp),
             'JobId': message['JobId'],
             'DetectedLabels': dumps(frames)
         })
         print ({
             'S3Key': message['S3Key'],
-            'AttrType': 'ana/bft/{Timestamp}'.format(Timestamp=curr_timestamp),
+            'AttrType': 'ana/bft/'+str(message['SampleRate'])+'/{Timestamp}'.format(Timestamp=curr_timestamp),
             'JobId': message['JobId'],
             'DetectedLabels': dumps(frames)
         })

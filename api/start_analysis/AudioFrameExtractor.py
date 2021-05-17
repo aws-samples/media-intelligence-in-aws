@@ -26,6 +26,19 @@ class AudioFrameExtractor:
         except Exception as e:
             print("MediaConvert job creation exception \n", e)
             return False
+
+    def get_mediaconvert_job(self,job_id):
+        if self.mediaconvert is False:
+            raise Exception("MediaConvert client creation failed")
+        try:
+            job_response = self.mediaconvert.get_job(
+            Id=job_id
+        )
+        except Exception as e:
+            print("MediaConvert get job exception \n", e)
+            return False
+        else:
+            return job_response
     
     def _convert_float_to_fraction(self, number, decimal_separator='.'):
         denominator = 1
@@ -48,7 +61,7 @@ class AudioFrameExtractor:
     def _build_media_convert_job_settings(self, S3Key, Timestamp, SampleRate):
         file_name = (S3Key.split('/')[-1])
         # file_name_no_extension = file_name.split('.')[-2]
-        destination_bucket_uri = f's3://{self.destination_bucket}/videos/analysis/'
+        destination_bucket_uri = f's3://{self.destination_bucket}/videos/analysis'
 
         #Always a video required as an output for MediaConvert
         base_video_output = {

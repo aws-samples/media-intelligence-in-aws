@@ -1,0 +1,262 @@
+[
+  {
+    "Name": "Text",
+    "Confidence": 99.16483306884766,
+    "Instances": [],
+    "Parents": []
+  },
+  {
+    "Name": "Number",
+    "Confidence": 98.84508514404297,
+    "Instances": [],
+    "Parents": [
+      {
+        "Name": "Symbol"
+      },
+      {
+        "Name": "Text"
+      }
+    ]
+  },
+  {
+    "Name": "Symbol",
+    "Confidence": 98.84508514404297,
+    "Instances": [],
+    "Parents": []
+  },
+  {
+    "Name": "Alphabet",
+    "Confidence": 86.64591979980469,
+    "Instances": [],
+    "Parents": [
+      {
+        "Name": "Text"
+      }
+    ]
+  },
+  {
+    "Name": "Home Decor",
+    "Confidence": 96.89359283447266,
+    "Instances": [],
+    "Parents": []
+  },
+  {
+    "Name": "Hug",
+    "Confidence": 99.5572738647461,
+    "Instances": [],
+    "Parents": [
+      {
+        "Name": "Person"
+      }
+    ]
+  },
+  {
+    "Name": "Person",
+    "Confidence": 99.5572738647461,
+    "Instances": [
+      {
+        "BoundingBox": {
+          "Width": 0.6653333902359009,
+          "Height": 0.8752443194389343,
+          "Left": 0.2546033263206482,
+          "Top": 0.08281004428863525
+        },
+        "Confidence": 74.52616882324219
+      }
+    ],
+    "Parents": []
+  },
+  {
+    "Name": "Human",
+    "Confidence": 99.5572738647461,
+    "Instances": [],
+    "Parents": []
+  },
+  {
+    "Name": "Face",
+    "Confidence": 84.62027740478516,
+    "Instances": [],
+    "Parents": [
+      {
+        "Name": "Person"
+      }
+    ]
+  },
+  {
+    "Name": "Baby",
+    "Confidence": 78.46686553955078,
+    "Instances": [],
+    "Parents": [
+      {
+        "Name": "Person"
+      }
+    ]
+  },
+  {
+    "Name": "Gray",
+    "Confidence": 82.52561950683594,
+    "Instances": [],
+    "Parents": []
+  },
+  {
+    "Name": "Face",
+    "Confidence": 99.9510269165039,
+    "Instances": [],
+    "Parents": [
+      {
+        "Name": "Person"
+      }
+    ]
+  },
+  {
+    "Name": "Person",
+    "Confidence": 99.9510269165039,
+    "Instances": [
+      {
+        "BoundingBox": {
+          "Width": 0.4265417158603668,
+          "Height": 0.8628585934638977,
+          "Left": 0.21016772091388702,
+          "Top": 0.11903101950883865
+        },
+        "Confidence": 78.54402923583984
+      }
+    ],
+    "Parents": []
+  },
+  {
+    "Name": "Human",
+    "Confidence": 99.9510269165039,
+    "Instances": [],
+    "Parents": []
+  },
+  {
+    "Name": "Head",
+    "Confidence": 87.47273254394531,
+    "Instances": [],
+    "Parents": []
+  },
+  {
+    "Name": "Beard",
+    "Confidence": 81.79560852050781,
+    "Instances": [],
+    "Parents": [
+      {
+        "Name": "Face"
+      },
+      {
+        "Name": "Person"
+      }
+    ]
+  },
+  {
+    "Name": "Dress",
+    "Confidence": 99.87382507324219,
+    "Instances": [],
+    "Parents": [
+      {
+        "Name": "Clothing"
+      }
+    ]
+  },
+  {
+    "Name": "Clothing",
+    "Confidence": 99.87382507324219,
+    "Instances": [],
+    "Parents": []
+  },
+  {
+    "Name": "Apparel",
+    "Confidence": 99.87382507324219,
+    "Instances": [],
+    "Parents": []
+  },
+  {
+    "Name": "Female",
+    "Confidence": 97.72411346435547,
+    "Instances": [],
+    "Parents": [
+      {
+        "Name": "Person"
+      }
+    ]
+  },
+  {
+    "Name": "Person",
+    "Confidence": 97.72411346435547,
+    "Instances": [
+      {
+        "BoundingBox": {
+          "Width": 0.32226333022117615,
+          "Height": 0.8665456771850586,
+          "Left": 0.1304505169391632,
+          "Top": 0.1120636835694313
+        },
+        "Confidence": 92.26907348632812
+      }
+    ],
+    "Parents": []
+  },
+  {
+    "Name": "Woman",
+    "Confidence": 92.62777709960938,
+    "Instances": [],
+    "Parents": [
+      {
+        "Name": "Female"
+      },
+      {
+        "Name": "Person"
+      }
+    ]
+  },
+  {
+    "Name": "Suit",
+    "Confidence": 77.83625793457031,
+    "Instances": [],
+    "Parents": [
+      {
+        "Name": "Overcoat"
+      },
+      {
+        "Name": "Coat"
+      },
+      {
+        "Name": "Clothing"
+      }
+    ]
+  },
+  {
+    "Name": "Overcoat",
+    "Confidence": 77.83625793457031,
+    "Instances": [],
+    "Parents": [
+      {
+        "Name": "Coat"
+      },
+      {
+        "Name": "Clothing"
+      }
+    ]
+  },
+  {
+    "Name": "Coat",
+    "Confidence": 77.83625793457031,
+    "Instances": [],
+    "Parents": [
+      {
+        "Name": "Clothing"
+      }
+    ]
+  },
+  {
+    "Name": "Face",
+    "Confidence": 72.50152587890625,
+    "Instances": [],
+    "Parents": [
+      {
+        "Name": "Person"
+      }
+    ]
+  }
+]
