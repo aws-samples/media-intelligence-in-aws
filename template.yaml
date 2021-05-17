@@ -16,6 +16,14 @@ Parameters:
     Type: String
     Description: Amazon S3 bucket to bulk frames and audio outputs
     Default: "globo-dev"
+  ESDomainName:
+    Type: String
+    Description: Amazon ElasticSearch Domain name
+    Default: 'globo-dpp-es'
+  CognitoDomainName:
+    Type: String
+    Description: Amazon Cognito Domain name (Has to be unique)
+    Default: 'globo-dpp-kibana'
 
 Globals:
   Function:
@@ -23,8 +31,6 @@ Globals:
     Handler: app.lambda_handler
     Timeout: 300
     MemorySize: 1024
-    Layers:
-      - !Ref Shared
     # Environment:
     #   Variables:
     #     INPUT_BUCKET: !Ref S3Bucket
@@ -432,9 +438,9 @@ Resources:
               Action:
                 - s3:*
               Resource: "*"
-  ####################
-  #Lambda Permissions#
-  ####################
+  ######################
+  # Lambda Permissions #
+  ######################
   MCLambdaInvokePermissions:
     Type: AWS::Lambda::Permission
     Properties:
@@ -456,6 +462,31 @@ Resources:
       Principal: "sns.amazonaws.com"
       SourceArn: !Ref VideoAnalysisTopic
       FunctionName: !GetAtt BrandFromTextAnalysis.Arn
+  
+  #################
+  # ElasticSearch #
+  #################
+  NestedStack:
+    Type: AWS::CloudFormation::Stack
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TemplateURL: es_stack.yaml
+      Parameters:
+        ESDomainName: !Ref ESDomainName
+        CognitoDomainName: !Ref CognitoDomainName
+
+  ESLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda
+      Handler: esindex.lambda_handler
+      Role: !GetAtt NestedStack.Outputs.LambdaRole
+      Environment:
+        Variables:
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+          DOMAIN_ENDPOINT: !GetAtt NestedStack.Outputs.ESDomainEndpoint
+  
   #####################
   #Lambda Custom Layer#
   #####################

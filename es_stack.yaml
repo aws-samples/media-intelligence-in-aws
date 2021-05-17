@@ -1,0 +1,472 @@
+Description: >
+  Stack to deploy elasticsearch cluster and Lambda role
+
+Parameters:
+  ESDomainName:
+    Type: String
+    Description: Amazon ElasticSearch Domain name
+    Default: 'globo-dpp-es'
+  CognitoDomainName:
+    Type: String
+    Description: Amazon Cognito Domain name (Has to be unique)
+    Default: 'globo-dpp-kibana'
+
+Resources:
+  lambdaeskibanaLambdaFunctionServiceRole3CAA4E89:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      Policies:
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource:
+                  Fn::Join:
+                    - ""
+                    - - "arn:"
+                      - Ref: AWS::Partition
+                      - ":logs:"
+                      - Ref: AWS::Region
+                      - ":"
+                      - Ref: AWS::AccountId
+                      - :log-group:/aws/lambda/*
+            Version: "2012-10-17"
+          PolicyName: LambdaFunctionServiceRolePolicy
+  lambdaeskibanaLambdaFunctionServiceRoleDefaultPolicyD0744538:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - xray:PutTraceSegments
+              - xray:PutTelemetryRecords
+            Effect: Allow
+            Resource: "*"
+        Version: "2012-10-17"
+      PolicyName: lambdaeskibanaLambdaFunctionServiceRoleDefaultPolicyD0744538
+      Roles:
+        - Ref: lambdaeskibanaLambdaFunctionServiceRole3CAA4E89
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W12
+            reason: Lambda needs the following minimum required permissions to send trace data to X-Ray and access ENIs in a VPC.
+  lambdaeskibanaCognitoUserPoolF53C1400:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_phone_number
+            Priority: 1
+          - Name: verified_email
+            Priority: 2
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+      EmailVerificationMessage: The verification code to your new account is {####}
+      EmailVerificationSubject: Verify your new account
+      SmsVerificationMessage: The verification code to your new account is {####}
+      UserPoolAddOns:
+        AdvancedSecurityMode: ENFORCED
+      VerificationMessageTemplate:
+        DefaultEmailOption: CONFIRM_WITH_CODE
+        EmailMessage: The verification code to your new account is {####}
+        EmailSubject: Verify your new account
+        SmsMessage: The verification code to your new account is {####}
+    UpdateReplacePolicy: Retain
+    DeletionPolicy: Retain
+  lambdaeskibanaCognitoUserPoolClient3896C0B6:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId:
+        Ref: lambdaeskibanaCognitoUserPoolF53C1400
+      AllowedOAuthFlows:
+        - implicit
+        - code
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthScopes:
+        - profile
+        - phone
+        - email
+        - openid
+        - aws.cognito.signin.user.admin
+      CallbackURLs:
+        - https://example.com
+      SupportedIdentityProviders:
+        - COGNITO
+  lambdaeskibanaCognitoIdentityPool83C5566D:
+    Type: AWS::Cognito::IdentityPool
+    Properties:
+      AllowUnauthenticatedIdentities: false
+      CognitoIdentityProviders:
+        - ClientId:
+            Ref: lambdaeskibanaCognitoUserPoolClient3896C0B6
+          ProviderName:
+            Fn::GetAtt:
+              - lambdaeskibanaCognitoUserPoolF53C1400
+              - ProviderName
+          ServerSideTokenCheck: true
+  lambdaeskibanaUserPoolDomainA1B7637A:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Ref CognitoDomainName
+      UserPoolId:
+        Ref: lambdaeskibanaCognitoUserPoolF53C1400
+    DependsOn:
+      - lambdaeskibanaCognitoUserPoolF53C1400
+  lambdaeskibanaCognitoAuthorizedRoleC08D0363:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                cognito-identity.amazonaws.com:aud:
+                  Ref: lambdaeskibanaCognitoIdentityPool83C5566D
+              ForAnyValue:StringLike:
+                cognito-identity.amazonaws.com:amr: authenticated
+            Effect: Allow
+            Principal:
+              Federated: cognito-identity.amazonaws.com
+        Version: "2012-10-17"
+      Policies:
+        - PolicyDocument:
+            Statement:
+              - Action: es:ESHttp*
+                Effect: Allow
+                Resource:
+                  Fn::Join:
+                    - ""
+                    - - "arn:"
+                      - Ref: AWS::Partition
+                      - ":es:"
+                      - Ref: AWS::Region
+                      - ":"
+                      - Ref: AWS::AccountId
+                      - :domain/globo-kibana-users/*
+            Version: "2012-10-17"
+          PolicyName: CognitoAccessPolicy
+  lambdaeskibanaIdentityPoolRoleMapping51518E2F:
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+    Properties:
+      IdentityPoolId:
+        Ref: lambdaeskibanaCognitoIdentityPool83C5566D
+      Roles:
+        authenticated:
+          Fn::GetAtt:
+            - lambdaeskibanaCognitoAuthorizedRoleC08D0363
+            - Arn
+  lambdaeskibanaCognitoKibanaConfigureRoleDC6E0E46:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: es.amazonaws.com
+        Version: "2012-10-17"
+  lambdaeskibanaCognitoKibanaConfigureRolePolicy2CCD4655:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - cognito-idp:DescribeUserPool
+              - cognito-idp:CreateUserPoolClient
+              - cognito-idp:DeleteUserPoolClient
+              - cognito-idp:DescribeUserPoolClient
+              - cognito-idp:AdminInitiateAuth
+              - cognito-idp:AdminUserGlobalSignOut
+              - cognito-idp:ListUserPoolClients
+              - cognito-identity:DescribeIdentityPool
+              - cognito-identity:UpdateIdentityPool
+              - cognito-identity:SetIdentityPoolRoles
+              - cognito-identity:GetIdentityPoolRoles
+              - es:UpdateElasticsearchDomainConfig
+            Effect: Allow
+            Resource:
+              - Fn::GetAtt:
+                  - lambdaeskibanaCognitoUserPoolF53C1400
+                  - Arn
+              - Fn::Join:
+                  - ""
+                  - - "arn:aws:cognito-identity:"
+                    - Ref: AWS::Region
+                    - ":"
+                    - Ref: AWS::AccountId
+                    - :identitypool/
+                    - Ref: lambdaeskibanaCognitoIdentityPool83C5566D
+              - Fn::Join:
+                  - ""
+                  - - "arn:aws:es:"
+                    - Ref: AWS::Region
+                    - ":"
+                    - Ref: AWS::AccountId
+                    - :domain/my-domain
+          - Action: iam:PassRole
+            Condition:
+              StringLike:
+                iam:PassedToService: cognito-identity.amazonaws.com
+            Effect: Allow
+            Resource:
+              Fn::GetAtt:
+                - lambdaeskibanaCognitoKibanaConfigureRoleDC6E0E46
+                - Arn
+        Version: "2012-10-17"
+      PolicyName: lambdaeskibanaCognitoKibanaConfigureRolePolicy2CCD4655
+      Roles:
+        - Ref: lambdaeskibanaCognitoKibanaConfigureRoleDC6E0E46
+  lambdaeskibanaElasticsearchDomain3C090C69:
+    Type: AWS::Elasticsearch::Domain
+    Properties:
+      AccessPolicies:
+        Statement:
+          - Action: es:ESHttp*
+            Effect: Allow
+            Principal:
+              AWS:
+                - Fn::GetAtt:
+                    - lambdaeskibanaCognitoAuthorizedRoleC08D0363
+                    - Arn
+                - Fn::GetAtt:
+                    - lambdaeskibanaLambdaFunctionServiceRole3CAA4E89
+                    - Arn
+            Resource:
+              Fn::Join:
+                - ""
+                - - "arn:aws:es:"
+                  - Ref: AWS::Region
+                  - ":"
+                  - Ref: AWS::AccountId
+                  - :domain/my-domain/*
+        Version: "2012-10-17"
+      CognitoOptions:
+        Enabled: true
+        IdentityPoolId:
+          Ref: lambdaeskibanaCognitoIdentityPool83C5566D
+        RoleArn:
+          Fn::GetAtt:
+            - lambdaeskibanaCognitoKibanaConfigureRoleDC6E0E46
+            - Arn
+        UserPoolId:
+          Ref: lambdaeskibanaCognitoUserPoolF53C1400
+      DomainName: my-domain
+      EBSOptions:
+        EBSEnabled: true
+        VolumeSize: 10
+      ElasticsearchClusterConfig:
+        DedicatedMasterCount: 3
+        DedicatedMasterEnabled: true
+        InstanceCount: 3
+        ZoneAwarenessConfig:
+          AvailabilityZoneCount: 3
+        ZoneAwarenessEnabled: true
+      ElasticsearchVersion: "6.3"
+      EncryptionAtRestOptions:
+        Enabled: true
+      NodeToNodeEncryptionOptions:
+        Enabled: true
+      SnapshotOptions:
+        AutomatedSnapshotStartHour: 1
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W28
+            reason: The ES Domain is passed dynamically as as parameter and explicitly specified to ensure that IAM policies are configured to lockdown access to this specific ES instance only
+          - id: W90
+            reason: This is not a rule for the general case, just for specific use cases/industries
+  lambdaeskibanaStatusRedAlarm91243293:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      AlarmDescription: "At least one primary shard and its replicas are not allocated to a node. "
+      MetricName: ClusterStatus.red
+      Namespace: AWS/ES
+      Period: 60
+      Statistic: Maximum
+      Threshold: 1
+  lambdaeskibanaStatusYellowAlarm7E7220A7:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      AlarmDescription: At least one replica shard is not allocated to a node.
+      MetricName: ClusterStatus.yellow
+      Namespace: AWS/ES
+      Period: 60
+      Statistic: Maximum
+      Threshold: 1
+  lambdaeskibanaFreeStorageSpaceTooLowAlarm8BBE4782:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: LessThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      AlarmDescription: A node in your cluster is down to 20 GiB of free storage space.
+      MetricName: FreeStorageSpace
+      Namespace: AWS/ES
+      Period: 60
+      Statistic: Minimum
+      Threshold: 20000
+  lambdaeskibanaIndexWritesBlockedTooHighAlarm4D765E59:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      AlarmDescription: Your cluster is blocking write requests.
+      MetricName: ClusterIndexWritesBlocked
+      Namespace: AWS/ES
+      Period: 300
+      Statistic: Maximum
+      Threshold: 1
+  lambdaeskibanaAutomatedSnapshotFailureTooHighAlarm8522904F:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      AlarmDescription: An automated snapshot failed. This failure is often the result of a red cluster health status.
+      MetricName: AutomatedSnapshotFailure
+      Namespace: AWS/ES
+      Period: 60
+      Statistic: Maximum
+      Threshold: 1
+  lambdaeskibanaCPUUtilizationTooHighAlarm7DF33890:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 3
+      AlarmDescription: 100% CPU utilization is not uncommon, but sustained high usage is problematic. Consider using larger instance types or adding instances.
+      MetricName: CPUUtilization
+      Namespace: AWS/ES
+      Period: 900
+      Statistic: Average
+      Threshold: 80
+  lambdaeskibanaJVMMemoryPressureTooHighAlarm7692308C:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      AlarmDescription: Average JVM memory pressure over last 15 minutes too high. Consider scaling vertically.
+      MetricName: JVMMemoryPressure
+      Namespace: AWS/ES
+      Period: 900
+      Statistic: Average
+      Threshold: 80
+  lambdaeskibanaMasterCPUUtilizationTooHighAlarmFC39CE30:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 3
+      AlarmDescription: Average CPU utilization over last 45 minutes too high. Consider using larger instance types for your dedicated master nodes.
+      MetricName: MasterCPUUtilization
+      Namespace: AWS/ES
+      Period: 900
+      Statistic: Average
+      Threshold: 50
+  lambdaeskibanaMasterJVMMemoryPressureTooHighAlarm1F9512ED:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: 1
+      AlarmDescription: Average JVM memory pressure over last 15 minutes too high. Consider scaling vertically.
+      MetricName: MasterJVMMemoryPressure
+      Namespace: AWS/ES
+      Period: 900
+      Statistic: Average
+      Threshold: 50
+Conditions:
+  CDKMetadataAvailable:
+    Fn::Or:
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - af-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-northeast-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ap-southeast-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - ca-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - cn-north-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - cn-northwest-1
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-central-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-north-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-2
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - eu-west-3
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - me-south-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - sa-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-east-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-east-2
+      - Fn::Or:
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-west-1
+          - Fn::Equals:
+              - Ref: AWS::Region
+              - us-west-2
+Outputs:
+  LambdaRole:
+    Value:
+      Fn::GetAtt:
+        - lambdaeskibanaLambdaFunctionServiceRole3CAA4E89
+        - Arn
+    Description: Lambda Role Arn with permissions to access ElasticSearch cluster
+  ESDomainEndpoint:
+    Value:
+      Fn::GetAtt:
+        - lambdaeskibanaElasticsearchDomain3C090C69
+        - DomainEndpoint
+    Description: ElasticSearch Domain Endpoint url
