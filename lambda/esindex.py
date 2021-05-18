@@ -4,6 +4,7 @@ import boto3
 import json
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
+from os import environ
 
 credentials = boto3.Session().get_credentials()
 awsauth = AWS4Auth(credentials.access_key, credentials.secret_key, 'us-east-1', 'es', session_token=credentials.token)
@@ -23,9 +24,8 @@ def connect_es(esEndPoint):
         print(E)
         exit(3)
 
-# ES_CLIENT = connectES(environ['DOMAIN_ENDPOINT'])
-ES_CLIENT = connect_es("search-my-domain-yrvyusealrb5eot5icbg6lffwy.us-east-1.es.amazonaws.com")
-
+ES_CLIENT = connect_es(environ['DOMAIN_ENDPOINT'])
+# ES_CLIENT = connect_es("search-my-domain-yrvyusealrb5eot5icbg6lffwy.us-east-1.es.amazonaws.com")
 def create_index(esClient, indexDoc):
     try:
         res = esClient.indices.exists('metadata-store')
@@ -81,4 +81,3 @@ def lambda_handler(event, context):
     except Exception as e:
         print('Failed to Index: {}'.format(e))
         raise e
-
