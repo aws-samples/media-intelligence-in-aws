@@ -11,11 +11,11 @@ Parameters:
   S3Bucket:
     Type: String
     Description: Your Amazon S3 bucket name
-    Default: "globo-data-copy"
+    Default: "pedroblackbelt"
   DestinationBucket:
     Type: String
     Description: Amazon S3 bucket to bulk frames and audio outputs
-    Default: "globo-dev"
+    Default: "pedroblackbelt"
   ESDomainName:
     Type: String
     Description: Amazon ElasticSearch Domain name
@@ -285,7 +285,7 @@ Resources:
       Role: !GetAtt LambdaMediaConvertRole.Arn
       Environment:
         Variables:
-          DDB_TABLE: !Ref ResultsTable
+          DDB_TABLE: !Ref DynamoDBTable
           MEDIA_CONVERT_ARN: !GetAtt MediaConvertS3Role.Arn
           DEST_S3_BUCKET: !Ref DestinationBucket
           IN_S3_BUCKET: !Ref S3Bucket
@@ -310,7 +310,7 @@ Resources:
           SNS_TOPIC: !Ref VideoAnalysisTopic
           MC_JOB_INDEX_NAME: "MediaConvertJobIndex"
           IN_S3_BUCKET: !Ref S3Bucket
-          DDB_TABLE: !Ref ResultsTable
+          DDB_TABLE: !Ref DynamoDBTable
   GetAnalysisFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -319,7 +319,7 @@ Resources:
       Role: !GetAtt APILambdaRole.Arn
       Environment:
         Variables:
-          DDB_TABLE: !Ref ResultsTable
+          DDB_TABLE: !Ref DynamoDBTable
       Events:
         GetVideoAnalysis:
           Type: Api
@@ -342,7 +342,7 @@ Resources:
       Environment:
         Variables:
           IN_S3_BUCKET: !Ref S3Bucket
-          DDB_TABLE: !Ref ResultsTable
+          DDB_TABLE: !Ref DynamoDBTable
           DEST_S3_BUCKET: !Ref DestinationBucket
   BrandFromTextAnalysis:
     Type: AWS::Serverless::Function
@@ -352,10 +352,12 @@ Resources:
       Role: !GetAtt LambdaRekognitionRole.Arn
       Environment:
         Variables:
-          DDB_TABLE: !Ref ResultsTable
+          DDB_TABLE: !Ref DynamoDBTable
           IN_S3_BUCKET: !Ref S3Bucket
           DEST_S3_BUCKET: !Ref DestinationBucket
           SIM_THRESHOLD: 0.7
+          # ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
+          ES_LAMBDA_ARN: arn:aws:lambda:us-east-1:869944303177:function:globo-test-ESLambda-npSAMWGJw3h8
       Policies:
         - Version: "2012-10-17"
           Statement:
@@ -375,6 +377,10 @@ Resources:
               Action:
                 - s3:*
               Resource: "*"
+            - Effect: Allow
+              Action:
+                - lambda:InvokeFunction
+              Resource: !GetAtt ESLambda.Arn
   ######################
   # Lambda Permissions #
   ######################

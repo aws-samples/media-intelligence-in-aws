@@ -1,35 +1,42 @@
 {
-  "document": {
-    "S3_Key":"/test/nice.play",
-    "timestamp": 2,
-    "brands": [
+  "results": {
+    "29699": [
       {
-        "brand":"mercedes",
-        "accuracy": 0.7
-      },{
-        "brand":"itau",
-        "accuracy": 0.7
+        "brand": "Havaianas",
+        "accuracy": 98.76408386230469
       },
       {
-        "brand":"mercedes",
-        "accuracy": 0.7
-      }
-      
-    ],
-    "sentiment": [
+        "brand": "Havaianas",
+        "accuracy": 99.95332336425781
+      },
       {
-        "person": "Felicidade",
-        "accuracy": 0.3
-      },{
-        "person": "Alegria",
-        "accuracy": 0.1
+        "brand": "Havaianas",
+        "accuracy": 98.76408386230469
+      },
+      {
+        "brand": "Havaianas",
+        "accuracy": 99.95332336425781
       }
     ],
-    "scene": [
+    "30699": [
       {
-        "place": "beach",
-        "accuracy": 1.0
+        "brand": "Havaianas",
+        "accuracy": 99.92570495605469
+      },
+      {
+        "brand": "Havaianas",
+        "accuracy": 78.04153789173472
+      },
+      {
+        "brand": "Havaianas",
+        "accuracy": 99.92570495605469
+      },
+      {
+        "brand": "Havaianas",
+        "accuracy": 99.94944763183594
       }
     ]
-  }
+  },
+  "type": "brands",
+  "S3_Key": "havaianas.mp4"
 }

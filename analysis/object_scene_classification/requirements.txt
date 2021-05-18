@@ -1,3 +1,3 @@
 requests
-cv2
-numpy
+opencv-python
+numpy==1.20.2

@@ -8,14 +8,15 @@ from time import sleep
 REKOGNITION = client('rekognition')
 SNS = client('sns')
 TABLE = resource('dynamodb').Table(environ['DDB_TABLE'])
+LAMBDA = client('lambda')
 
 def lambda_handler(event, context):
+    es_results = {}
     with open('brands.json') as brands_file:
         brand_set = FuzzySet(load(brands_file))
     
-    message = loads(
-        event['Records'][0]['Sns']['Message']
-    )
+    message = event['Records'][0]['Sns']['Message']
+    
     print('Starting text extraction ..')
     detection = REKOGNITION.start_text_detection(
         Video={
@@ -26,7 +27,7 @@ def lambda_handler(event, context):
         }
     )
 
-    print('Waiting for text extraction job ..')
+    print('Waiting for text extraction job')
     response = REKOGNITION.get_text_detection(
         JobId=detection['JobId']
     )
@@ -36,7 +37,7 @@ def lambda_handler(event, context):
         JobId=detection['JobId']
     )
     
-    print('Matching brands ..')
+    print('Matching brands')
     frames = []
     if len(response['TextDetections']) > 0:
         curr_timestamp = response['TextDetections'][0]['Timestamp']
@@ -58,14 +59,15 @@ def lambda_handler(event, context):
             else:
                 continue
                 
-            if detection['Timestamp'] != curr_timestamp:
+            if detection['Timestamp'] != curr_timestamp and len(frames) > 0:
+                es_results[curr_timestamp] = [
+                    {
+                        'brand': frame['MatchingBrands'][0][1],
+                        'accuracy': frame['Confidence']*frame['MatchingBrands'][0][0]
+                    }
+                    for frame in frames
+                ]
                 batch.put_item(Item={
-                    'S3Key': message['S3Key'],
-                    'AttrType': 'ana/bft/'+str(message['SampleRate'])+'/{Timestamp}'.format(Timestamp=curr_timestamp),
-                    'JobId': message['JobId'],
-                    'DetectedLabels': dumps(frames)
-                })
-                print ({
                     'S3Key': message['S3Key'],
                     'AttrType': 'ana/bft/'+str(message['SampleRate'])+'/{Timestamp}'.format(Timestamp=curr_timestamp),
                     'JobId': message['JobId'],
@@ -74,21 +76,46 @@ def lambda_handler(event, context):
                 frames = []
                 curr_timestamp = detection['Timestamp']
             
-            frames.append({
-                'DetectedText': detection['TextDetection']['DetectedText'],
-                'Confidence': detection['TextDetection']['Confidence'],
-                'MatchingBrands': matching_brands
+            if len(matching_brands) > 0:
+                frames.append({
+                    'DetectedText': detection['TextDetection']['DetectedText'],
+                    'Confidence': detection['TextDetection']['Confidence'],
+                    'MatchingBrands': matching_brands,
+                    'Geometry': detection['TextDetection']['Geometry']
+                })
+        if len(frames) > 0:
+            es_results[curr_timestamp] = [
+                    {
+                        'brand': frame['MatchingBrands'][0][1],
+                        'accuracy': frame['Confidence']*frame['MatchingBrands'][0][0]
+                    }
+                    for frame in frames
+                ]
+            batch.put_item(Item={
+                'S3Key': message['S3Key'],
+                'AttrType': 'ana/bft/{sample_rate}/{timestamp}'.format(
+                    sample_rate=message['SampleRate'],
+                    timestamp=curr_timestamp),
+                'JobId': message['JobId'],
+                'DetectedLabels': dumps(frames)
             })
 
-        batch.put_item(Item={
-            'S3Key': message['S3Key'],
-            'AttrType': 'ana/bft/'+str(message['SampleRate'])+'/{Timestamp}'.format(Timestamp=curr_timestamp),
-            'JobId': message['JobId'],
-            'DetectedLabels': dumps(frames)
+    # Index documents on ElasticSearch
+    ans = LAMBDA.invoke(
+        FunctionName=environ['ES_LAMBDA_ARN'],
+        InvocationType='RequestResponse',
+        Payload=dumps({
+            'results': es_results,
+            'type': 'brands',
+            'S3_Key': message['S3Key']
         })
-        print ({
-            'S3Key': message['S3Key'],
-            'AttrType': 'ana/bft/'+str(message['SampleRate'])+'/{Timestamp}'.format(Timestamp=curr_timestamp),
-            'JobId': message['JobId'],
-            'DetectedLabels': dumps(frames)
-        })
+    )
+    print(ans)
+
+    print ({
+        'S3_Key': message['S3Key'],
+        'AttrType': 'ana/bft/'+str(message['SampleRate'])+'/{Timestamp}'.format(Timestamp=curr_timestamp),
+        'JobId': message['JobId'],
+        'DetectedLabels': dumps(frames),
+        'ESIndexResult': es_results
+    })

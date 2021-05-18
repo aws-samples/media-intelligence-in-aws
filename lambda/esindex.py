@@ -5,11 +5,10 @@ import json
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 
-service = 'es'
 credentials = boto3.Session().get_credentials()
-awsauth = AWS4Auth(credentials.access_key, credentials.secret_key, 'us-east-1', service, session_token=credentials.token)
+awsauth = AWS4Auth(credentials.access_key, credentials.secret_key, 'us-east-1', 'es', session_token=credentials.token)
 
-def connectES(esEndPoint):
+def connect_es(esEndPoint):
     print ('Connecting to the ES Endpoint {0}'.format(esEndPoint))
     try:
         esClient = Elasticsearch(
@@ -24,7 +23,10 @@ def connectES(esEndPoint):
         print(E)
         exit(3)
 
-def createIndex(esClient, indexDoc):
+# ES_CLIENT = connectES(environ['DOMAIN_ENDPOINT'])
+ES_CLIENT = connect_es("search-my-domain-yrvyusealrb5eot5icbg6lffwy.us-east-1.es.amazonaws.com")
+
+def create_index(esClient, indexDoc):
     try:
         res = esClient.indices.exists('metadata-store')
         if res is False:
@@ -35,7 +37,7 @@ def createIndex(esClient, indexDoc):
             print(E)
             exit(4)
 
-def indexDocElement(esClient,key,document):
+def index_doc_element(esClient,key,document):
     # Performs an upsert on the index
     try:
         retval = esClient.update(
@@ -50,25 +52,33 @@ def indexDocElement(esClient,key,document):
         print("Error: ",E)
         exit(5)	
 
+def gen_documents(analysisResult):
+    for timestamp in analysisResult['results'].items():
+        yield {
+            'S3_Key': analysisResult['S3_Key'].replace('/','-'),
+            'timestamp': int(timestamp[0]),
+            analysisResult['type']:timestamp[1]
+        }
+
 def lambda_handler(event, context):
     print("Received event: " + json.dumps(event, indent=2))
-    esClient = connectES("search-my-domain-yrvyusealrb5eot5icbg6lffwy.us-east-1.es.amazonaws.com")
     index = {
       "doc": {},
       "upsert": {}
     }
-    index['doc'] = index['upsert'] = event['document']
 
     # createIndex(esClient) # In case we need to create an index
 
     try:
-        response = indexDocElement(
-            esClient,
-            event['document']['S3_Key'].replace('/','-'),
-            index)
+        for document in gen_documents(event):
+            index['doc'] = index['upsert'] = document
+            response = index_doc_element(
+                ES_CLIENT,
+                '{}-{}'.format(document["S3_Key"],document["timestamp"]),
+                index
+            )
         return response
     except Exception as e:
-        print(e)
-        print('Error getting object {} from bucket {}. Make sure they exist and your bucket is in the same region as this function.'.format(key, bucket))
+        print('Failed to Index: {}'.format(e))
         raise e
 
