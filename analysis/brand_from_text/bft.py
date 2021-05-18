@@ -15,7 +15,7 @@ def lambda_handler(event, context):
     with open('brands.json') as brands_file:
         brand_set = FuzzySet(load(brands_file))
     
-    message = event['Records'][0]['Sns']['Message']
+    message = loads(event['Records'][0]['Sns']['Message'])
     
     print('Starting text extraction ..')
     detection = REKOGNITION.start_text_detection(

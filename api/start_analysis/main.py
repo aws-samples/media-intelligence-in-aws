@@ -20,7 +20,6 @@ RESPONSE_PATTERN = {
     'body':{}
 }
 
-# GetAnalysis [GET] (analysis/{s3key}?Param1=bla)
 # StartAnalysis [POST] (analysis/start)
 
 def lambda_handler(event, context):

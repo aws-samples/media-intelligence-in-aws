@@ -349,7 +349,6 @@ Resources:
     Properties:
       CodeUri: analysis/brand_from_text/
       Handler: bft.lambda_handler
-      Role: !GetAtt LambdaRekognitionRole.Arn
       Environment:
         Variables:
           DDB_TABLE: !Ref DynamoDBTable
