@@ -18,7 +18,13 @@ Parameters:
     Default: "globo-dev"
   DynamoDBTable:
     Type: String
-    Default: "globo-dpp-table"
+    Default: "globo-jobs"
+  CelebrityCollectionID:
+    Type: String
+    Default: "bra-celebs"
+  StageName:
+    Type: String
+    Default: "Prod"
 
 Globals:
   Function:
@@ -28,6 +34,9 @@ Globals:
     MemorySize: 1024
     Layers:
       - !Ref Shared
+    Environment:
+      Variables:
+        STAGE: !Ref StageName
 
 Resources:
   #############
@@ -249,7 +258,7 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       Name: RestAPI
-      StageName: Prod
+      StageName: !Ref StageName
       Auth:
         ApiKeyRequired: true
         UsagePlan:
@@ -359,25 +368,7 @@ Resources:
           DDB_TABLE: !Ref ResultsTable
           IN_S3_BUCKET: !Ref S3Bucket
           DEST_S3_BUCKET: !Ref DestinationBucket
-#      Policies:
-#        - Version: "2012-10-17"
-#          Statement:
-#            - Effect: Allow
-#              Action:
-#                - rekognition:*
-#              Resource: "*"
-#            - Effect: Allow
-#              Action:
-#                - dynamodb:*
-#              Resource: "*"
-#            - Effect: Allow
-#              Action:
-#                - sns:Publish
-#              Resource: "*"
-#            - Effect: Allow
-#              Action:
-#                - s3:*
-#              Resource: "*"
+          CELEBRITY_COLLECTION_ID: !Ref CelebrityCollectionID
   ####################
   #Lambda Permissions#
   ####################
