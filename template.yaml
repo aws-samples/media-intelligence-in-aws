@@ -11,11 +11,11 @@ Parameters:
   S3Bucket:
     Type: String
     Description: Your Amazon S3 bucket name
-    Default: "pedroblackbelt"
+    Default: "globo-data-copy"
   DestinationBucket:
     Type: String
     Description: Amazon S3 bucket to bulk frames and audio outputs
-    Default: "pedroblackbelt"
+    Default: "globo-dev"
   ESDomainName:
     Type: String
     Description: Amazon ElasticSearch Domain name
