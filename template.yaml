@@ -437,7 +437,7 @@ Resources:
   #################
   NestedStack:
     Type: AWS::CloudFormation::Stack
-    DeletionPolicy: Retain
+    DeletionPolicy: Delete
     UpdateReplacePolicy: Retain
     Properties:
       TemplateURL: es_stack.yaml
