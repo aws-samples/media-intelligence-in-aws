@@ -19,11 +19,11 @@ Parameters:
   ESDomainName:
     Type: String
     Description: Amazon ElasticSearch Domain name
-    Default: 'globo-dpp-es'
+    Default: 'globo-dpp-es-domain'
   CognitoDomainName:
     Type: String
     Description: Amazon Cognito Domain name (Has to be unique)
-    Default: 'globo-dpp-kibana'
+    Default: 'globo-dpp-up-kibana'
   DynamoDBTable:
     Type: String
     Default: "globo-jobs"
