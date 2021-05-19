@@ -353,6 +353,7 @@ Resources:
           IN_S3_BUCKET: !Ref S3Bucket
           DDB_TABLE: !Ref DynamoDBTable
           DEST_S3_BUCKET: !Ref DestinationBucket
+          ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
   BrandFromTextAnalysis:
     Type: AWS::Serverless::Function
     Properties:
@@ -401,6 +402,7 @@ Resources:
           IN_S3_BUCKET: !Ref S3Bucket
           DEST_S3_BUCKET: !Ref DestinationBucket
           CELEBRITY_COLLECTION_ID: !Ref CelebrityCollectionID
+          ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
   ######################
   # Lambda Permissions #
   ######################

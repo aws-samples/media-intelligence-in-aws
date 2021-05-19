@@ -14,6 +14,7 @@ TABLE = resource('dynamodb').Table(environ['DDB_TABLE'])
 S3 = client('s3')
 S3_BUCKET = resource('s3').Bucket(environ['DEST_S3_BUCKET'])
 COLLECTION_ID = environ['CELEBRITY_COLLECTION_ID']
+LAMBDA = client('lambda')
 
 def lambda_handler(event, context):
 
@@ -52,7 +53,7 @@ def lambda_handler(event, context):
     else:
         osc_results = TABLE.query(
             KeyConditionExpression=
-            Key('S3_KEY').eq(s3_key) & Key('ATTR_TYPE').begins_with(analysis_base_name + '/')
+            Key('S3KEY').eq(s3_key) & Key('ATTR_TYPE').begins_with(analysis_base_name + '/')
         )
         if osc_results == [] or osc_results is False:
             print("No results saved on dynamo, proceeding face rekognition with all frames")
@@ -63,8 +64,18 @@ def lambda_handler(event, context):
 
     dynamo_record['SampleRate'] = message['SampleRate']
     response['body']['data'] = celebrity_rekognition
-    # TODO
-    #   Handle DLQ
+
+    ans = LAMBDA.invoke(
+        FunctionName=environ['ES_LAMBDA_ARN'],
+        InvocationType='RequestResponse',
+        Payload=dumps({
+            'results': celebrity_rekognition,
+            'type': 'celebrities',
+            'S3_Key': message['S3Key']
+        })
+    )
+
+    print(ans)
 
     return response
 
@@ -120,14 +131,15 @@ def sanitize_string(string_variable):
     return string_variable
 
 def detect_celebrities_from_frames(s3_bucket,frames,dynamo_record,identifier='_frame_',format='.jpg',threshold=80):
-    celebrities_by_frame = []
+    es_results = []
     s3_key = dynamo_record['S3Key']
     timestamp_fraction_ms = 1000/dynamo_record['SampleRate']
     with TABLE.batch_writer() as batch:
         for frame in frames:
+            es_frame_results = []
             frame_name = sanitize_string(frame.split('/')[-1])
             frame_number = frame_name.replace(s3_key,'',frame_name.replace('.jpg',''))
-            frame_number = int(frame_name.replace(identifier,''))
+            frame_number = int(frame_number.replace(identifier,''))
 
             frame_timestamp = int(frame_number*timestamp_fraction_ms)
             dynamo_base_name = "ana/cff/"+str(dynamo_record['SampleRate'])+'/{Timestamp}'.format(Timestamp=frame_timestamp)
@@ -171,7 +183,15 @@ def detect_celebrities_from_frames(s3_bucket,frames,dynamo_record,identifier='_f
                             frame_celebrities[celebrity]['avg_confidence'] = (frame_celebrities[celebrity]['avg_confidence']+data['avg_confidence'])/frame_celebrities[celebrity]['total_matches'],
                         else:
                             frame_celebrities[celebrity] = data
-            celebrities_by_frame.append({frame_timestamp:frame_celebrities})
+            for frame_celebrity,data in frame_celebrities:
+               es_frame_results.append({
+                   'celebrity':frame_celebrity,
+                   'accuracy':data['avg_confidence']
+               })
+            if es_frame_results != []:
+                es_results.append({
+                    frame_timestamp:es_frame_results.copy()
+                })
             individual_results = {
                 'S3Key': s3_key,
                 'AttrType': dynamo_base_name,
@@ -180,7 +200,7 @@ def detect_celebrities_from_frames(s3_bucket,frames,dynamo_record,identifier='_f
                 'FrameS3Key': frame
             }
             batch.put_item(Item=individual_results)
-    return celebrities_by_frame
+    return es_results
 
 def get_frames_list_s3(s3_bucket,output_path):
     s3_objects = get_s3_object_list(s3_bucket, output_path.replace("s3://" + s3_bucket + "/", ""))
