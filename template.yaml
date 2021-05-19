@@ -7,7 +7,7 @@ Parameters:
   Email:
     Type: String
     Description: Email to notify when fail occurs
-    Default: youremail@yourprovider.com
+    Default: "arbahena@amazon.com"
   S3Bucket:
     Type: String
     Description: Your Amazon S3 bucket name
@@ -27,6 +27,12 @@ Parameters:
   DynamoDBTable:
     Type: String
     Default: "globo-jobs"
+  CelebrityCollectionID:
+    Type: String
+    Default: "bra-celebs"
+  StageName:
+    Type: String
+    Default: "Prod"
 
 Globals:
   Function:
@@ -36,6 +42,9 @@ Globals:
     MemorySize: 1024
     Layers:
       - !Ref Shared
+    Environment:
+      Variables:
+        STAGE: !Ref StageName
 
 Resources:
   #############
@@ -257,7 +266,7 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       Name: RestAPI
-      StageName: Prod
+      StageName: !Ref StageName
       Auth:
         ApiKeyRequired: true
         UsagePlan:
@@ -355,8 +364,8 @@ Resources:
           IN_S3_BUCKET: !Ref S3Bucket
           DEST_S3_BUCKET: !Ref DestinationBucket
           SIM_THRESHOLD: 0.7
-          # ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
-          ES_LAMBDA_ARN: arn:aws:lambda:us-east-1:869944303177:function:globo-test-ESLambda-npSAMWGJw3h8
+          ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
+          #ES_LAMBDA_ARN: arn:aws:lambda:us-east-1:869944303177:function:globo-test-ESLambda-npSAMWGJw3h8
       Policies:
         - Version: "2012-10-17"
           Statement:
@@ -380,6 +389,18 @@ Resources:
               Action:
                 - lambda:InvokeFunction
               Resource: !GetAtt ESLambda.Arn
+  CelebritiesFromFramesAnalysis:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: analysis/celebrity_from_frames/
+      Handler: cff.lambda_handler
+      Role: !GetAtt LambdaRekognitionRole.Arn
+      Environment:
+        Variables:
+          DDB_TABLE: !Ref ResultsTable
+          IN_S3_BUCKET: !Ref S3Bucket
+          DEST_S3_BUCKET: !Ref DestinationBucket
+          CELEBRITY_COLLECTION_ID: !Ref CelebrityCollectionID
   ######################
   # Lambda Permissions #
   ######################
@@ -404,7 +425,13 @@ Resources:
       Principal: "sns.amazonaws.com"
       SourceArn: !Ref VideoAnalysisTopic
       FunctionName: !GetAtt BrandFromTextAnalysis.Arn
-  
+  CelebritiesFromFramesLambdaInvokePermissions:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: "lambda:InvokeFunction"
+      Principal: "sns.amazonaws.com"
+      SourceArn: !Ref VideoAnalysisTopic
+      FunctionName: !GetAtt CelebritiesFromFramesAnalysis.Arn
   #################
   # ElasticSearch #
   #################
@@ -429,6 +456,7 @@ Resources:
           AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
           DOMAIN_ENDPOINT: !GetAtt NestedStack.Outputs.ESDomainEndpoint
   
+
   #####################
   #Lambda Custom Layer#
   #####################
@@ -467,6 +495,13 @@ Resources:
       Protocol: lambda
       FilterPolicy: '{"analysis": ["all", "bft"]}'
       TopicArn: !Ref VideoAnalysisTopic
+  cffSub:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt CelebritiesFromFramesAnalysis.Arn
+      Protocol: lambda
+      FilterPolicy: '{"analysis":["all","cff"]}'
+      TopicArn: !Ref VideoAnalysisTopic
   EmailTopic:
     Type: AWS::SNS::Topic
     Properties:
@@ -474,7 +509,6 @@ Resources:
       Subscription:
         - Endpoint: !Ref Email
           Protocol: email
-
   ################
   # IAM Policies #
   ################
