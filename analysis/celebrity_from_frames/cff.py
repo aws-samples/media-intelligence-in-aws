@@ -37,7 +37,7 @@ def lambda_handler(event, context):
     JobId = message['JobId']
     dynamo_record = TABLE.query(
         KeyConditionExpression=
-        Key('S3Key').eq(s3_key) & Key('JobId').eq(JobId) & Key('AttrType').eq('frm/'+str(sample_rate))
+        Key('S3Key').eq(s3_key) & Key('AttrType').eq('frm/'+str(sample_rate))
     )['Items'][0]
 
     if dynamo_record is False or dynamo_record == []:
@@ -47,14 +47,14 @@ def lambda_handler(event, context):
 
     frame_output_path = message['OutputPath']
     analysis_list = dynamo_record['analysis']
-    analysis_base_name = 'ana/osc/'+str(sample_rate)
+    analysis_base_name = 'ana/osc/'+str(sample_rate)+'/'
     if "all" not in analysis_list and "osc" not in analysis_list:
         print("Do face detection on frames")
         frames = get_frames_list_s3(S3_BUCKET,frame_output_path)
     else:
         osc_results = TABLE.query(
             KeyConditionExpression=
-            Key('S3KEY').eq(s3_key) & Key('JobId').eq(JobId) & Key('AttrType').begins_with(analysis_base_name + '/')
+            Key('S3KEY').eq(s3_key) & Key('AttrType').begins_with(analysis_base_name)
         )
         if osc_results == [] or osc_results is False:
             print("No results saved on dynamo, proceeding face rekognition with all frames")
