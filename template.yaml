@@ -23,7 +23,7 @@ Parameters:
   CognitoDomainName:
     Type: String
     Description: Amazon Cognito Domain name (Has to be unique)
-    Default: 'globo-dpp-kibana'
+    Default: 'globo-dpp-es-kibana'
   DynamoDBTable:
     Type: String
     Default: "globo-jobs"
@@ -435,26 +435,26 @@ Resources:
   #################
   # ElasticSearch #
   #################
-#  NestedStack:
-#    Type: AWS::CloudFormation::Stack
-#    DeletionPolicy: Retain
-#    UpdateReplacePolicy: Retain
-#    Properties:
-#      TemplateURL: es_stack.yaml
-#      Parameters:
-#        ESDomainName: !Ref ESDomainName
-#        CognitoDomainName: !Ref CognitoDomainName
-#
-#  ESLambda:
-#    Type: AWS::Serverless::Function
-#    Properties:
-#      CodeUri: lambda
-#      Handler: esindex.lambda_handler
-#      Role: !GetAtt NestedStack.Outputs.LambdaRole
-#      Environment:
-#        Variables:
-#          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
-#          DOMAIN_ENDPOINT: !GetAtt NestedStack.Outputs.ESDomainEndpoint
+  NestedStack:
+    Type: AWS::CloudFormation::Stack
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TemplateURL: es_stack.yaml
+      Parameters:
+        ESDomainName: !Ref ESDomainName
+        CognitoDomainName: !Ref CognitoDomainName
+
+  ESLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda
+      Handler: esindex.lambda_handler
+      Role: !GetAtt NestedStack.Outputs.LambdaRole
+      Environment:
+        Variables:
+          AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+          DOMAIN_ENDPOINT: !GetAtt NestedStack.Outputs.ESDomainEndpoint
   
 
   #####################

@@ -11,8 +11,8 @@ REGION = environ['AWS_REGION']
 FACE_REKOGNITION = FaceRekognition(REGION)
 SNS = client('sns')
 TABLE = resource('dynamodb').Table(environ['DDB_TABLE'])
-S3 =client('s3')
-S3_BUCKET = S3.Bucket(environ['DEST_S3_BUCKET'])
+S3 = client('s3')
+S3_BUCKET = resource('s3').Bucket(environ['DEST_S3_BUCKET'])
 COLLECTION_ID = environ['CELEBRITY_COLLECTION_ID']
 
 def lambda_handler(event, context):

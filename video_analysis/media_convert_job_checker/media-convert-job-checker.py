@@ -23,7 +23,10 @@ def lambda_handler(event, context):
         print("Failed getting job id "+ JobId)
         raise Exception("No MediaConvert job found with id: "+JobId)
 
+    print(mc_job)
+
     mc_job = mc_job['Job']
+    #mc_job_status = mc_job['']
     print(mc_job)
 
     s3_key = mc_job['Settings']['Inputs'][0]['FileInput'].replace('s3://{}/'.format(environ['IN_S3_BUCKET']), '')
