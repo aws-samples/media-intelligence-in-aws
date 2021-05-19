@@ -38,11 +38,14 @@ def lambda_handler(event, context):
     dynamo_record = TABLE.query(
         IndexName='JobIdIndex',
         KeyConditionExpression=
-        Key('S3Key').eq(s3_key) & Key('JobId').eq(JobId)
+        Key('S3Key').eq(s3_key) & Key('JobId').eq(JobId),
+        Select='ALL_ATTRIBUTES'
     )['Items'][0]
 
     if dynamo_record is False or dynamo_record == []:
         raise Exception("No item found on DynamoDB with: " + s3_key + " & " + JobId)
+
+    print(dynamo_record)
 
     frame_output_path = message['OutputPath']
     analysis_list = dynamo_record['analysis']

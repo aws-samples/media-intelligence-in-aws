@@ -23,41 +23,43 @@ def lambda_handler(event, context):
         print("Failed getting job id "+ JobId)
         raise Exception("No MediaConvert job found with id: "+JobId)
 
-    print(mc_job)
 
     mc_job = mc_job['Job']
-    #mc_job_status = mc_job['']
-    print(mc_job)
 
     s3_key = mc_job['Settings']['Inputs'][0]['FileInput'].replace('s3://{}/'.format(environ['IN_S3_BUCKET']), '')
 
     Item = TABLE.query(
             IndexName='JobIdIndex',
             KeyConditionExpression = 
-                Key('S3Key').eq(s3_key) & Key('JobId').eq(JobId)
+                Key('S3Key').eq(s3_key) & Key('JobId').eq(JobId),
+            Select='ALL_ATTRIBUTES'
             )['Items'][0]
 
     if Item is False or Item == []:
         raise Exception("No item found on DynamoDB with: "+s3_key+" & "+JobId)
 
     sample_rate = int(Item['AttrType'].replace('frm/',''))
-
-    return SNS_TOPIC.publish(
-        Message=dumps(
-            {
-                "S3Key": Item['S3Key'],
-                "SampleRate": sample_rate,
-                "JobId": JobId,
-                "OutputPath": mc_job['Settings']['OutputGroups'][0]['OutputGroupSettings']['FileGroupSettings']['Destination']
+    if mc_job['Status'] == 'CANCELED' or ['Status'] == 'ERROR':
+        print("MediaConvert Job failed, aborting workflow")
+        #Notification SNS
+        # Send Email to notify failure
+    else:
+        return SNS_TOPIC.publish(
+            Message=dumps(
+                {
+                    "S3Key": Item['S3Key'],
+                    "SampleRate": sample_rate,
+                    "JobId": JobId,
+                    "OutputPath": mc_job['Settings']['OutputGroups'][0]['OutputGroupSettings']['FileGroupSettings']['Destination']
+                }
+            ),
+            MessageAttributes={
+                'analysis': {
+                    'DataType': 'String.Array',
+                    'StringValue': dumps(Item['analysis'])
+                }
             }
-        ),
-        MessageAttributes={
-            'analysis': {
-                'DataType': 'String.Array',
-                'StringValue': dumps(Item['analysis'])
-            }
-        }
-    )
+        )
 
 
 def check_mediaconvert_job(job_id):
