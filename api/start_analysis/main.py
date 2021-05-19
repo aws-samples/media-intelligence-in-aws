@@ -70,7 +70,7 @@ def lambda_handler(event, context):
                         "S3Key": Item['S3Key'],
                         "JobId": Item['JobId'],
                         "SampleRate": event['body']['SampleRate'],
-                        "OutputPath": mc_job['Settings']['OutputGroups'][0]['OutputGroupSettings']['FileGroupSettings']['Destination']
+                        "OutputPath": mc_job['Job']['Settings']['OutputGroups'][0]['OutputGroupSettings']['FileGroupSettings']['Destination']
                     }
                 ),
                 MessageAttributes={

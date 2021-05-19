@@ -36,10 +36,8 @@ def lambda_handler(event, context):
     sample_rate = message['SampleRate']
     JobId = message['JobId']
     dynamo_record = TABLE.query(
-        IndexName='JobIdIndex',
         KeyConditionExpression=
-        Key('S3Key').eq(s3_key) & Key('JobId').eq(JobId),
-        Select='ALL_ATTRIBUTES'
+        Key('S3Key').eq(s3_key) & Key('JobId').eq(JobId) & Key('AttrType').eq('frm/'+str(sample_rate))
     )['Items'][0]
 
     if dynamo_record is False or dynamo_record == []:
@@ -56,16 +54,16 @@ def lambda_handler(event, context):
     else:
         osc_results = TABLE.query(
             KeyConditionExpression=
-            Key('S3KEY').eq(s3_key) & Key('ATTR_TYPE').begins_with(analysis_base_name + '/')
+            Key('S3KEY').eq(s3_key) & Key('JobId').eq(JobId) & Key('AttrType').begins_with(analysis_base_name + '/')
         )
         if osc_results == [] or osc_results is False:
             print("No results saved on dynamo, proceeding face rekognition with all frames")
             frames = get_frames_list_s3(environ['DEST_S3_BUCKET'], frame_output_path)
         else:
-            frames = get_frames_list_osc(osc_results)
+            frames = get_frames_list_osc(osc_results['Items'])
+
     celebrity_rekognition = detect_celebrities_from_frames(environ['DEST_S3_BUCKET'],frames,dynamo_record)
 
-    dynamo_record['SampleRate'] = message['SampleRate']
     response['body']['data'] = celebrity_rekognition
 
     ans = LAMBDA.invoke(
