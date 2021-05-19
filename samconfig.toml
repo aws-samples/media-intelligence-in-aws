@@ -1,0 +1,11 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "globo"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-qwmxecpzgogx"
+s3_prefix = "globo"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Email=\"arbahena@amazon.com\" S3Bucket=\"globo-data-copy\" DestinationBucket=\"globo-dev\""
+confirm_changeset = true
