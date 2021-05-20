@@ -13,6 +13,8 @@ TABLE = resource('dynamodb').Table(environ['DDB_TABLE'])
 SNS_TOPIC = resource('sns').Topic(environ['SNS_TOPIC'])
 
 def lambda_handler(event, context):
+    print("Processing event \n",dumps(event))
+
     JobId = event['Records'][0]['Sns']['Message']
     JobId = JobId.replace("job_id:","")
     JobId = sanitize_string(JobId)
@@ -39,11 +41,10 @@ def lambda_handler(event, context):
         raise Exception("No item found on DynamoDB with: "+s3_key+" & "+JobId)
 
     sample_rate = int(Item['AttrType'].replace('frm/',''))
-    if mc_job['Status'] == 'CANCELED' or ['Status'] == 'ERROR':
+    if mc_job['Status'] == 'CANCELED' or mc_job['Status'] == 'ERROR':
         print("MediaConvert Job failed, aborting workflow")
-        #Notification SNS
-        SNS_TOPIC = resource('sns').Topic(environ['SNS_EMAIL_TOPIC'])
-        return SNS_TOPIC.publish(
+        SNS_EMAIL_TOPIC = resource('sns').Topic(environ['SNS_EMAIL_TOPIC'])
+        return SNS_EMAIL_TOPIC.publish(
             Message= " MediaConvert Job Failed for S3Key: "+s3_key+" and JobId: "+JobId +
                      " please refer to the Elemental MediaConvert console \n " +
                      " \n\n Job details: https://"+ environ['AWS_REGION'] +

@@ -72,7 +72,7 @@ Resources:
                   - s3:PutObject
                 Resource:
                   - !Sub "arn:aws:s3:::${S3Bucket}/*"
-                  #- !Sub "arn:aws:s3:::${DestinationBucket}/*"
+                  - !Sub "arn:aws:s3:::${DestinationBucket}/*"
         - PolicyName: MediaConvertCloudWatchEventsPolicy
           PolicyDocument:
             Statement:
