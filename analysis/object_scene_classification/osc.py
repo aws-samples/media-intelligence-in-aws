@@ -9,6 +9,7 @@ REKOGNITION = client('rekognition')
 SNS = client('sns')
 TABLE = resource('dynamodb').Table(environ['DDB_TABLE'])
 S3 =client('s3')
+LAMBDA = client('lambda')
 
 def lambda_handler(event, context):
 
@@ -41,8 +42,18 @@ def lambda_handler(event, context):
     dynamo_record['SampleRate'] = message['SampleRate']
     job_status = start_rekognition_label_job(dynamo_record,frame_output_path)
     response['body']['data'] = job_status
-    # TODO
-    #   Handle DLQ
+
+    ans = LAMBDA.invoke(
+        FunctionName=environ['ES_LAMBDA_ARN'],
+        InvocationType='RequestResponse',
+        Payload=dumps({
+            'results': response['es_results'],
+            'type': 'object_scene_classification',
+            'S3_Key': message['S3Key']
+        })
+    )
+
+    print(ans)
 
     return response
 
@@ -69,9 +80,10 @@ def start_rekognition_label_job(dynamo_record,output_path,min_confidence=70,name
     failed_frames = []
     current_frame = 0
     timestamp_fraction_ms = 1000/dynamo_record['SampleRate']
-
+    response['es_results'] = []
     with TABLE.batch_writer() as batch:
         for file_name in object_name_list:
+            objects_scene_in_frame = []
             try:
                 job_response = REKOGNITION.detect_labels(
                     Image={
@@ -96,6 +108,15 @@ def start_rekognition_label_job(dynamo_record,output_path,min_confidence=70,name
                     'FrameS3Key':file_name
                 }
                 batch.put_item(Item=individual_results)
+                unique_labels = unique_labels_in_image(job_response['Labels'])
+                for label,data in unique_labels:
+                    objects_scene_in_frame.append({
+                        'object_scene': label,
+                        'accuracy': data['avg_confidence']
+                    })
+                response['es_results'].append({
+                    timestamp: objects_scene_in_frame
+                })
             current_frame += 1
 
     response['msg'] = "Job completed for "+str(len(object_name_list))+" frames"
@@ -154,6 +175,25 @@ def sanitize_string(string_variable):
     string_variable = string_variable.replace(":","")
     return string_variable
 
-def process_rekognition_results(rek_results):
 
-    return rek_results
+def get_average(self, accumulated, new, n):
+    if n == 0 or n == 1:
+        return new
+    return (accumulated * n + new) / (n + 1)
+
+def unique_labels_in_image(objects,threshold=80):
+    unique_objects = {}
+    for label in objects:
+        if label['Confidence'] < threshold:
+            continue
+        object_scene = label['Name']
+        if object_scene not in unique_objects:
+            unique_objects[object_scene] = {
+                'total_matches':0,
+                'avg_confidence': label['Confidence']
+            }
+        else:
+            unique_objects[object_scene]['total_matches'] += 1
+            unique_objects[object_scene]['avg_confidence'] = get_average(unique_objects[object_scene]['avg_confidence'],label['Confidence'],unique_objects[object_scene]['total_matches'])
+
+    return unique_objects

@@ -54,7 +54,7 @@ def lambda_handler(event, context):
     else:
         osc_results = TABLE.query(
             KeyConditionExpression=
-            Key('S3KEY').eq(s3_key) & Key('AttrType').begins_with(analysis_base_name)
+            Key('S3Key').eq(s3_key) & Key('AttrType').begins_with(analysis_base_name)
         )
         if osc_results == [] or osc_results is False:
             print("No results saved on dynamo, proceeding face rekognition with all frames")
@@ -194,7 +194,7 @@ def detect_celebrities_from_frames(s3_bucket,frames,dynamo_record,identifier='_f
                     frame_timestamp:es_frame_results.copy()
                 })
             individual_results = {
-                'S3Key': s3_key,
+                'S3Key': dynamo_record['S3Key'],
                 'AttrType': dynamo_base_name,
                 'JobId': dynamo_record['JobId'],
                 'CelebritiesDetected': dumps(frame_celebrities),
