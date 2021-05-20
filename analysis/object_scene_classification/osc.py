@@ -110,7 +110,7 @@ def start_rekognition_label_job(dynamo_record,output_path,min_confidence=70,name
                 batch.put_item(Item=individual_results)
                 unique_labels = unique_labels_in_image(job_response['Labels'])
                 print(unique_labels)
-                for label,data in unique_labels:
+                for label,data in unique_labels.iteritems():
                     objects_scene_in_frame.append({
                         'object_scene': label,
                         'accuracy': data['avg_confidence']
