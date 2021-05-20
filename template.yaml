@@ -214,6 +214,10 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
                   - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !GetAtt ESLambda.Arn
   APILambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -359,6 +363,7 @@ Resources:
     Properties:
       CodeUri: analysis/brand_from_text/
       Handler: bft.lambda_handler
+      Role: !GetAtt LambdaRekognitionRole.Arn
       Environment:
         Variables:
           DDB_TABLE: !Ref DynamoDBTable
@@ -367,29 +372,6 @@ Resources:
           SIM_THRESHOLD: 0.7
           ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
           # ES_LAMBDA_ARN: arn:aws:lambda:us-east-1:869944303177:function:globo-test-ESLambda-npSAMWGJw3h8
-      Policies:
-        - Version: "2012-10-17"
-          Statement:
-            - Effect: Allow
-              Action:
-                - rekognition:*
-              Resource: "*"
-            - Effect: Allow
-              Action:
-                - dynamodb:*
-              Resource: "*"
-            - Effect: Allow
-              Action:
-                - sns:Publish
-              Resource: "*"
-            - Effect: Allow
-              Action:
-                - s3:*
-              Resource: "*"
-            - Effect: Allow
-              Action:
-                - lambda:InvokeFunction
-              Resource: !GetAtt ESLambda.Arn
   CelebritiesFromFramesAnalysis:
     Type: AWS::Serverless::Function
     Properties:
