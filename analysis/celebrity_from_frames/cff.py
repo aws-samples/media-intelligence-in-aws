@@ -140,9 +140,7 @@ def detect_celebrities_from_frames(s3_bucket,frames,dynamo_record,identifier='_f
             es_frame_results = []
             frame_name = sanitize_string(frame.split('/')[-1])
             frame_name = frame_name.replace(s3_key,'')
-            print(s3_key.split('/')[-1])
             frame_name = frame_name.replace(s3_key.split('/')[-1],'')
-            print(frame_name)
             frame_name = frame_name.replace('.jpg','')
             frame_name = frame_name.replace(identifier,'')
             frame_number = int(frame_name.split('.')[-1])
@@ -198,13 +196,14 @@ def detect_celebrities_from_frames(s3_bucket,frames,dynamo_record,identifier='_f
                 es_results.append({
                     frame_timestamp:es_frame_results.copy()
                 })
-            individual_results = {
-                'S3Key': dynamo_record['S3Key'],
-                'AttrType': dynamo_base_name,
-                'JobId': dynamo_record['JobId'],
-                'CelebritiesDetected': dumps(frame_celebrities),
-                'FrameS3Key': frame
-            }
+            if frame_celebrities != {}:
+                individual_results = {
+                    'S3Key': dynamo_record['S3Key'],
+                    'AttrType': dynamo_base_name,
+                    'JobId': dynamo_record['JobId'],
+                    'CelebritiesDetected': dumps(frame_celebrities),
+                    'FrameS3Key': frame
+                }
             batch.put_item(Item=individual_results)
     return es_results
 
