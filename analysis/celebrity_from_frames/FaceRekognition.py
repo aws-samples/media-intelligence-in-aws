@@ -66,7 +66,7 @@ class FaceRekognition:
 
             if face_name not in unique_faces:
                 unique_faces[face_name] = {
-                    'total_matches':0,
+                    'total_matches':1,
                     'avg_similarity': face_results['Similarity'],
                     'avg_confidence': face['Confidence']
                 }

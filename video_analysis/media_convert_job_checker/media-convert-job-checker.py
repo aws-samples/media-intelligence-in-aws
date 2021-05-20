@@ -42,7 +42,14 @@ def lambda_handler(event, context):
     if mc_job['Status'] == 'CANCELED' or ['Status'] == 'ERROR':
         print("MediaConvert Job failed, aborting workflow")
         #Notification SNS
-        # Send Email to notify failure
+        SNS_TOPIC = resource('sns').Topic(environ['SNS_EMAIL_TOPIC'])
+        return SNS_TOPIC.publish(
+            Message= " MediaConvert Job Failed for S3Key: "+s3_key+" and JobId: "+JobId +
+                     " please refer to the Elemental MediaConvert console \n " +
+                     " \n\n Job details: https://"+ environ['AWS_REGION'] +
+                     ".console.aws.amazon.com/mediaconvert/home?region="+ environ['AWS_REGION'] +
+                     "#/jobs/summary/"+JobId
+        )
     else:
         return SNS_TOPIC.publish(
             Message=dumps(

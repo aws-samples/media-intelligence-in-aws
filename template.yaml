@@ -72,7 +72,7 @@ Resources:
                   - s3:PutObject
                 Resource:
                   - !Sub "arn:aws:s3:::${S3Bucket}/*"
-                  - !Sub "arn:aws:s3:::${DestinationBucket}/*"
+                  #- !Sub "arn:aws:s3:::${DestinationBucket}/*"
         - PolicyName: MediaConvertCloudWatchEventsPolicy
           PolicyDocument:
             Statement:
@@ -321,7 +321,7 @@ Resources:
       Environment:
         Variables:
           SNS_TOPIC: !Ref VideoAnalysisTopic
-          MC_JOB_INDEX_NAME: "MediaConvertJobIndex"
+          SNS_EMAIL_TOPIC: !Ref EmailTopic
           IN_S3_BUCKET: !Ref S3Bucket
           DDB_TABLE: !Ref DynamoDBTable
   GetAnalysisFunction:
@@ -371,7 +371,6 @@ Resources:
           DEST_S3_BUCKET: !Ref DestinationBucket
           SIM_THRESHOLD: 0.7
           ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
-          # ES_LAMBDA_ARN: arn:aws:lambda:us-east-1:869944303177:function:globo-test-ESLambda-npSAMWGJw3h8
   CelebritiesFromFramesAnalysis:
     Type: AWS::Serverless::Function
     Properties:
