@@ -31,7 +31,7 @@ def lambda_handler(event, context):
     message = loads(
         event['Records'][0]['Sns']['Message']
     )
-    print('Starting object/scene classification ...')
+    print('Starting celebrities detection ...')
     s3_key = message['S3Key'].replace('s3://{}/'.format(environ['IN_S3_BUCKET']), '')
     sample_rate = message['SampleRate']
     JobId = message['JobId']
@@ -55,12 +55,12 @@ def lambda_handler(event, context):
         osc_results = TABLE.query(
             KeyConditionExpression=
             Key('S3Key').eq(s3_key) & Key('AttrType').begins_with(analysis_base_name)
-        )
+        )['Items']
         if osc_results == [] or osc_results is False:
             print("No results saved on dynamo, proceeding face rekognition with all frames")
             frames = get_frames_list_s3(environ['DEST_S3_BUCKET'], frame_output_path)
         else:
-            frames = get_frames_list_osc(osc_results['Items'])
+            frames = get_frames_list_osc(osc_results)
 
     celebrity_rekognition = detect_celebrities_from_frames(environ['DEST_S3_BUCKET'],frames,dynamo_record)
 
@@ -204,7 +204,7 @@ def detect_celebrities_from_frames(s3_bucket,frames,dynamo_record,identifier='_f
                     'CelebritiesDetected': dumps(frame_celebrities),
                     'FrameS3Key': frame
                 }
-            batch.put_item(Item=individual_results)
+                batch.put_item(Item=individual_results)
     return es_results
 
 def get_frames_list_s3(s3_bucket,output_path):
