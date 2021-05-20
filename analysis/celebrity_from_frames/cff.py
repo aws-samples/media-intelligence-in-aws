@@ -139,8 +139,9 @@ def detect_celebrities_from_frames(s3_bucket,frames,dynamo_record,identifier='_f
         for frame in frames:
             es_frame_results = []
             frame_name = sanitize_string(frame.split('/')[-1])
-            frame_number = frame_name.replace(s3_key,'',frame_name.replace('.jpg',''))
-            frame_number = int(frame_number.replace(identifier,''))
+            frame_name = frame_name.replace(s3_key,'')
+            frame_name = frame_name.replace('.jpg','')
+            frame_number = int(frame_name.replace(identifier,''))
 
             frame_timestamp = int(frame_number*timestamp_fraction_ms)
             dynamo_base_name = "ana/cff/"+str(dynamo_record['SampleRate'])+'/{Timestamp}'.format(Timestamp=frame_timestamp)
@@ -177,14 +178,14 @@ def detect_celebrities_from_frames(s3_bucket,frames,dynamo_record,identifier='_f
                     continue
                 if celebs_found['FaceMatches'] != []:
                     celebrities = FACE_REKOGNITION.celeb_names_in_image(celebs_found['FaceMatches'], threshold,environ['STAGE'])
-                    for celebrity,data in celebrities.iteritems():
+                    for celebrity,data in celebrities.items():
                         if celebrity in frame_celebrities:
                             frame_celebrities[celebrity]['total_matches'] += data['total_matches']
                             frame_celebrities[celebrity]['avg_similarity'] = (frame_celebrities[celebrity]['avg_similarity']+data['avg_similarity'])/frame_celebrities[celebrity]['total_matches'],
                             frame_celebrities[celebrity]['avg_confidence'] = (frame_celebrities[celebrity]['avg_confidence']+data['avg_confidence'])/frame_celebrities[celebrity]['total_matches'],
                         else:
                             frame_celebrities[celebrity] = data
-            for frame_celebrity,data in frame_celebrities.iteritems():
+            for frame_celebrity,data in frame_celebrities.items():
                es_frame_results.append({
                    'celebrity':frame_celebrity,
                    'accuracy':data['avg_confidence']
@@ -222,7 +223,7 @@ def get_frames_list_osc(osc_results):
     for object_result in osc_results:
         if 'ObjectSceneDetectedLabels' not in object_result:
             continue
-        print(object_result['ObjectSceneDetectedLabels'])
+        #print(object_result['ObjectSceneDetectedLabels'])
         object_scene_labels = loads(object_result['ObjectSceneDetectedLabels'])
         for object_scene_label in object_scene_labels:
             if object_scene_label['Name'] == 'Face' or object_scene_label['Name'] == 'Person':
