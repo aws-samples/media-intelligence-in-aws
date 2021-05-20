@@ -224,6 +224,7 @@ def get_frames_list_osc(osc_results):
             continue
         object_scene_labels = object_result['ObjectSceneDetectedLabels']
         for object_scene_label in object_scene_labels:
+            print(object_scene_label)
             if object_scene_label['Name'] == 'Face' or object_scene_label['Name'] == 'Person':
                 frame_list.append(object_result['FrameS3Key'])
                 break
