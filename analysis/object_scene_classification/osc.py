@@ -47,7 +47,7 @@ def lambda_handler(event, context):
         FunctionName=environ['ES_LAMBDA_ARN'],
         InvocationType='RequestResponse',
         Payload=dumps({
-            'results': response['es_results'],
+            'results': job_status['es_results'],
             'type': 'object_scene_classification',
             'S3_Key': message['S3Key']
         })
@@ -109,7 +109,6 @@ def start_rekognition_label_job(dynamo_record,output_path,min_confidence=70,name
                 }
                 batch.put_item(Item=individual_results)
                 unique_labels = unique_labels_in_image(job_response['Labels'])
-                print(unique_labels)
                 for label,data in unique_labels.items():
                     objects_scene_in_frame.append({
                         'object_scene': label,

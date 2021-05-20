@@ -139,7 +139,8 @@ def detect_celebrities_from_frames(s3_bucket,frames,dynamo_record,identifier='_f
         for frame in frames:
             es_frame_results = []
             frame_name = sanitize_string(frame.split('/')[-1])
-            frame_name = frame_name.replace(s3_key,'')
+            frame_name = frame_name.replace(s3_key.split('/')[-1],'')
+            print(frame_name)
             frame_name = frame_name.replace('.jpg','')
             frame_number = int(frame_name.replace(identifier,''))
 
