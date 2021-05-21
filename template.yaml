@@ -358,11 +358,6 @@ Resources:
           DDB_TABLE: !Ref DynamoDBTable
           DEST_S3_BUCKET: !Ref DestinationBucket
           ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
-      Policies:
-        - Effect: Allow
-          Action:
-            - lambda:InvokeFunction
-          Resource: !Sub "arn:aws:lambda:*:728516303426:function:*"
   BrandFromTextAnalysis:
     Type: AWS::Serverless::Function
     Properties:
@@ -405,6 +400,13 @@ Resources:
       Action: "lambda:InvokeFunction"
       Principal: "sns.amazonaws.com"
       SourceArn: !Ref VideoAnalysisTopic
+      FunctionName: !GetAtt SceneClassification.Arn
+  OSCLambdaInvokePermissions:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: "lambda:InvokeFunction"
+      Principal: !GetAtt LambdaRekognitionRole.Arn
+      SourceArn: !GetAtt SceneClassification.Arn
       FunctionName: !GetAtt SceneClassification.Arn
   BrandFromTextLambdaInvokePermissions:
     Type: AWS::Lambda::Permission
