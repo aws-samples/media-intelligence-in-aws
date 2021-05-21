@@ -57,7 +57,9 @@ def gen_documents(analysisResult):
         yield {
             'S3_Key': analysisResult['S3_Key'].replace('/','-'),
             'timestamp': int(timestamp[0]),
-            analysisResult['type']:timestamp[1]
+            analysisResult['type']:timestamp[1],
+            'JobId': analysisResult['JobId'],
+            'FrameRate': analysisResult['FrameRate']
         }
 
 def lambda_handler(event, context):

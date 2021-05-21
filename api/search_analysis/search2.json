@@ -1,0 +1,24 @@
+{
+  "must": { 
+    "brands": [
+      {
+        "brand": "itau", "accuracy": 0.2
+      },
+      {
+        "brand": "mercedes"
+      }
+    ],
+    "scenes": [
+      {
+        "scene": "beach"
+      }
+    ],
+    "sentiments": [
+      { 
+        "sentiment": "happy" 
+      }
+    ]
+  },
+  "S3Key": "/test/nice.play",
+  "FrameRate": 3
+}

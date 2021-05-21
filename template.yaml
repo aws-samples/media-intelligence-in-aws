@@ -308,6 +308,25 @@ Resources:
             RestApiId: !Ref RestAPI
             Auth:
               ApiKeyRequired: true
+  SearchAnalysisFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: api/search_analysis/
+      Handler: main.lambda_handler
+      Role: !GetAtt LambdaMediaConvertRole.Arn
+      Environment:
+        Variables:
+          DOMAIN_ENDPOINT: !GetAtt NestedStack.Outputs.ESDomainEndpoint
+          # DOMAIN_ENDPOINT: search-my-domain-yrvyusealrb5eot5icbg6lffwy.us-east-1.es.amazonaws.com
+      Events:
+        StartVideoAnalysis:
+          Type: Api
+          Properties:
+            Path: /analysis/search
+            Method: GET
+            RestApiId: !Ref RestAPI
+            Auth:
+              ApiKeyRequired: true
   MediaConvertJobChecker:
     Type: AWS::Serverless::Function
     Properties:
