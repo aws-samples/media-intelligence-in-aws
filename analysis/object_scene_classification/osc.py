@@ -2,6 +2,7 @@ from os import environ
 from json import dumps,loads
 from boto3 import client,resource
 from boto3.dynamodb.conditions import Key
+from math import ceil
 
 
 REGION = environ['AWS_REGION']
@@ -40,7 +41,7 @@ def lambda_handler(event, context):
 
     frame_output_path = message['OutputPath']
     dynamo_record['SampleRate'] = message['SampleRate']
-    job_status = start_rekognition_label_job(dynamo_record,frame_output_path)
+    job_status = start_rekognition_label_job(dynamo_record,frame_output_path,lambda_arn=context.invoked_function_arn)
     response['body']['data'] = job_status
 
     ans = LAMBDA.invoke(
@@ -49,7 +50,8 @@ def lambda_handler(event, context):
         Payload=dumps({
             'results': job_status['es_results'],
             'type': 'object_scene_classification',
-            'S3_Key': message['S3Key']
+            'S3_Key': message['S3Key'],
+            'SampleRate': message['SampleRate']
         })
     )
 
@@ -57,7 +59,7 @@ def lambda_handler(event, context):
 
     return response
 
-def start_rekognition_label_job(dynamo_record,output_path,min_confidence=70,name_identifier="_frame_"):
+def start_rekognition_label_job(dynamo_record,output_path,start_from="",lambda_arn="",min_confidence=70,name_identifier="_frame_"):
     response = {}
     if S3 is False:
         raise Exception("S3 client creation failed")
@@ -74,6 +76,40 @@ def start_rekognition_label_job(dynamo_record,output_path,min_confidence=70,name
         print("No frames found on " + output_path + ", verify your MediaConvert job, only jpg and png files supported")
         return {"msg": "No frames found verify your MediaConvert job, only jpg and png files supported"}
 
+    if start_from == "" and len(object_name_list) > 1000:
+        fractions = int(ceil(len(object_name_list) / 1000))
+        fraction = 1
+        while fraction < fractions:
+            start_point = (1000*fraction) + 1
+            if (len(object_name_list)-(1000*(fraction+1))) > 0:
+                end_point = (1000*(fraction+1)) + 1
+            else:
+                end_point = len(object_name_list)
+            if fraction == 1:
+                start_from = 0
+                fraction += 1
+                continue
+            lambda_response = LAMBDA.invoke(
+                FunctionName=lambda_arn,
+                InvocationType='Event',
+                Payload=dumps({
+                    'start_from': start_point,
+                    'end_in': end_point,
+                    'SNS_Message':{
+                        'S3Key':dynamo_record['S3Key'],
+                        'SampleRate':dynamo_record['SampleRate'],
+                        'JobId':dynamo_record['JobId'],
+                        'OutputPath':output_path
+                    }
+                })
+            )
+            message = "Splitted workload into " + str(fractions) + " workers. \n Worker" + str(
+                fraction) + " from " + str(start_point) + " to " + str(end_point) + "\n Lambda Response: \n"
+            print(message, lambda_response)
+            fraction += 1
+
+    exit(0)
+
     if REKOGNITION is False:
         raise Exception("Rekognition client creation failed")
 
@@ -83,6 +119,9 @@ def start_rekognition_label_job(dynamo_record,output_path,min_confidence=70,name
     response['es_results'] = []
     with TABLE.batch_writer() as batch:
         for file_name in object_name_list:
+            if current_frame < int(start_from):
+                current_frame += 1
+                continue
             objects_scene_in_frame = []
             try:
                 job_response = REKOGNITION.detect_labels(
@@ -100,23 +139,24 @@ def start_rekognition_label_job(dynamo_record,output_path,min_confidence=70,name
                 failed_frames.append({'frame_name':file_name,'reason':e})
             else:
                 timestamp = int(current_frame*timestamp_fraction_ms)
-                individual_results={
-                    'S3Key':dynamo_record['S3Key'],
-                    'AttrType':'ana/osc/'+str(dynamo_record['SampleRate'])+'/{Timestamp}'.format(Timestamp=timestamp),
-                    'JobId':dynamo_record['JobId'],
-                    'ObjectSceneDetectedLabels':dumps(job_response['Labels']),
-                    'FrameS3Key':file_name
-                }
-                batch.put_item(Item=individual_results)
-                unique_labels = unique_labels_in_image(job_response['Labels'])
-                for label,data in unique_labels.items():
-                    objects_scene_in_frame.append({
-                        'object_scene': label,
-                        'accuracy': data['avg_confidence']
+                if len(job_response['Labels']) > 0:
+                    individual_results={
+                        'S3Key':dynamo_record['S3Key'],
+                        'AttrType':'ana/osc/'+str(dynamo_record['SampleRate'])+'/{Timestamp}'.format(Timestamp=timestamp),
+                        'JobId':dynamo_record['JobId'],
+                        'ObjectSceneDetectedLabels':dumps(job_response['Labels']),
+                        'FrameS3Key':file_name
+                    }
+                    batch.put_item(Item=individual_results)
+                    unique_labels = unique_labels_in_image(job_response['Labels'])
+                    for label,data in unique_labels.items():
+                        objects_scene_in_frame.append({
+                            'object_scene': label,
+                            'accuracy': data['avg_confidence']
+                        })
+                    response['es_results'].append({
+                        timestamp: objects_scene_in_frame
                     })
-                response['es_results'].append({
-                    timestamp: objects_scene_in_frame
-                })
             current_frame += 1
 
     response['msg'] = "Job completed for "+str(len(object_name_list))+" frames"
@@ -135,7 +175,6 @@ def get_s3_object_list(s3_bucket,path,marker='',s3_objects=[]):
                 Prefix=path
             )
         else:
-            print("Continue from "+marker)
             s3_response = S3.list_objects(
                 Bucket=s3_bucket,
                 Marker=marker,

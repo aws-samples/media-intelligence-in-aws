@@ -358,6 +358,11 @@ Resources:
           DDB_TABLE: !Ref DynamoDBTable
           DEST_S3_BUCKET: !Ref DestinationBucket
           ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
+      Policies:
+        - Effect: Allow
+          Action:
+            - lambda:InvokeFunction
+          Resource: !Sub "arn:aws:lambda:*:728516303426:function:*"
   BrandFromTextAnalysis:
     Type: AWS::Serverless::Function
     Properties:

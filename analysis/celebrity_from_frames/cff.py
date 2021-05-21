@@ -72,7 +72,8 @@ def lambda_handler(event, context):
         Payload=dumps({
             'results': celebrity_rekognition,
             'type': 'celebrities',
-            'S3_Key': message['S3Key']
+            'S3_Key': message['S3Key'],
+            'SampleRate': message['SampleRate']
         })
     )
 
