@@ -23,10 +23,28 @@ def lambda_handler(event, context):
     }
 
     print("Processing the event: \n ", dumps(event))
-    # S3Key,JobId,OutputPath
-    message = loads(
-        event['Records'][0]['Sns']['Message']
-    )
+    algo = {
+        "start_from": 2001,
+        "end_in": 3001,
+        "SNS_Message": {
+            "S3Key": "videos/amor-de-m-e.mp4",
+            "SampleRate": 1,
+            "JobId": "1621549560857-ctupgt",
+            "OutputPath": "s3://globo-dev/videos/analysis/amor-de-m-e.mp4/1/1621549560.6706796/"
+        }
+    }
+    if 'Records' in event:
+        message = loads(
+            event['Records'][0]['Sns']['Message']
+        )
+        start_from = ""
+    elif 'SNS_Message' in event:
+        message = event['SNS_Message']
+        start_from = event['start_from']
+    else:
+        print("No valid event, abortin execution")
+        exit(0)
+
     print('Starting object/scene classification ...')
     s3_key = message['S3Key'].replace('s3://{}/'.format(environ['IN_S3_BUCKET']), '')
     JobId = message['JobId']
@@ -41,7 +59,7 @@ def lambda_handler(event, context):
 
     frame_output_path = message['OutputPath']
     dynamo_record['SampleRate'] = message['SampleRate']
-    job_status = start_rekognition_label_job(dynamo_record,frame_output_path,lambda_arn=context.invoked_function_arn)
+    job_status = start_rekognition_label_job(dynamo_record,frame_output_path,start_from=start_from,lambda_arn=context.invoked_function_arn)
     response['body']['data'] = job_status
 
     ans = LAMBDA.invoke(
@@ -78,37 +96,37 @@ def start_rekognition_label_job(dynamo_record,output_path,start_from="",lambda_a
 
     if start_from == "" and len(object_name_list) > 1000:
         fractions = int(ceil(len(object_name_list) / 1000))
-        fraction = 1
+        fraction = 0
         while fraction < fractions:
             start_point = (1000*fraction) + 1
             if (len(object_name_list)-(1000*(fraction+1))) > 0:
                 end_point = (1000*(fraction+1)) + 1
             else:
                 end_point = len(object_name_list)
-            if fraction == 1:
+            if fraction == 0:
                 start_from = 0
-                fraction += 1
                 continue
-            lambda_response = LAMBDA.invoke(
-                FunctionName=lambda_arn,
-                InvocationType='Event',
-                Payload=dumps({
-                    'start_from': start_point,
-                    'end_in': end_point,
-                    'SNS_Message':{
-                        'S3Key':dynamo_record['S3Key'],
-                        'SampleRate':dynamo_record['SampleRate'],
-                        'JobId':dynamo_record['JobId'],
-                        'OutputPath':output_path
-                    }
-                })
-            )
-            message = "Splitted workload into " + str(fractions) + " workers. \n Worker" + str(
-                fraction) + " from " + str(start_point) + " to " + str(end_point) + "\n Lambda Response: \n"
-            print(message, lambda_response)
+            else:
+                lambda_response = LAMBDA.invoke(
+                    FunctionName=lambda_arn,
+                    InvocationType='Event',
+                    Payload=dumps({
+                        'start_from': start_point,
+                        'end_in': end_point,
+                        'SNS_Message':{
+                            'S3Key':dynamo_record['S3Key'],
+                            'SampleRate':dynamo_record['SampleRate'],
+                            'JobId':dynamo_record['JobId'],
+                            'OutputPath':output_path
+                        }
+                    })
+                )
+                message = "Splitted workload into " + str(fractions) + " workers. \n Worker" + str(
+                    fraction) + " from " + str(start_point) + " to " + str(end_point) + "\n Lambda Response: \n"
+                print(message, lambda_response)
             fraction += 1
 
-    exit(0)
+    end = 1000+start_from+1
 
     if REKOGNITION is False:
         raise Exception("Rekognition client creation failed")
@@ -122,6 +140,8 @@ def start_rekognition_label_job(dynamo_record,output_path,start_from="",lambda_a
             if current_frame < int(start_from):
                 current_frame += 1
                 continue
+            if current_frame == end:
+                break
             objects_scene_in_frame = []
             try:
                 job_response = REKOGNITION.detect_labels(
