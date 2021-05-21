@@ -218,8 +218,7 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource:
-                  - !GetAtt ESLambda.Arn
-                  - !GetAtt SceneClassification.Arn
+                  - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*"
   APILambdaRole:
     Type: AWS::IAM::Role
     Properties:
