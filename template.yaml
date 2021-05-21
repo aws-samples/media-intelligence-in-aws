@@ -217,7 +217,9 @@ Resources:
               - Effect: Allow
                 Action:
                   - lambda:InvokeFunction
-                Resource: !GetAtt ESLambda.Arn
+                Resource:
+                  - !GetAtt ESLambda.Arn
+                  - !GetAtt SceneClassification.Arn
   APILambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -400,13 +402,6 @@ Resources:
       Action: "lambda:InvokeFunction"
       Principal: "sns.amazonaws.com"
       SourceArn: !Ref VideoAnalysisTopic
-      FunctionName: !GetAtt SceneClassification.Arn
-  OSCLambdaInvokePermissions:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: "lambda:InvokeFunction"
-      Principal: !GetAtt LambdaRekognitionRole.Arn
-      SourceArn: !GetAtt SceneClassification.Arn
       FunctionName: !GetAtt SceneClassification.Arn
   BrandFromTextLambdaInvokePermissions:
     Type: AWS::Lambda::Permission
