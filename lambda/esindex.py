@@ -1,20 +1,29 @@
 from __future__ import print_function
 from pprint import pprint
 import boto3
-import json
+from json import dumps
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 from os import environ
+from IndexDefinition import IndexDefinition
+from hashlib import md5
 
-credentials = boto3.Session().get_credentials()
-awsauth = AWS4Auth(credentials.access_key, credentials.secret_key, 'us-east-1', 'es', session_token=credentials.token)
+INDEX_NAME = 'analysis-results'
 
 def connect_es(esEndPoint):
+    __credentials = boto3.Session().get_credentials()
+    __awsauth = AWS4Auth(
+        __credentials.access_key,
+        __credentials.secret_key,
+        'us-east-1',
+        'es',
+        session_token=__credentials.token
+    )
     print ('Connecting to the ES Endpoint {0}'.format(esEndPoint))
     try:
         esClient = Elasticsearch(
             hosts=[{'host': esEndPoint, 'port': 443}],
-            http_auth = awsauth,
+            http_auth = __awsauth,
             use_ssl=True,
             verify_certs=True,
             connection_class=RequestsHttpConnection)
@@ -24,62 +33,112 @@ def connect_es(esEndPoint):
         print(E)
         exit(3)
 
-ES_CLIENT = connect_es(environ['DOMAIN_ENDPOINT'])
-# ES_CLIENT = connect_es("search-my-domain-yrvyusealrb5eot5icbg6lffwy.us-east-1.es.amazonaws.com")
 def create_index(esClient, indexDoc):
     try:
-        res = esClient.indices.exists('metadata-store')
+        res = esClient.indices.exists(INDEX_NAME)
         if res is False:
-            esClient.indices.create('metadata-store', body=indexDoc)
+            esClient.indices.create(INDEX_NAME, body=indexDoc)
         return 1
     except Exception as E:
-            print("Unable to Create Index {0}".format("metadata-store"))
+            print("Unable to Create Index {0}".format(INDEX_NAME))
             print(E)
             exit(4)
 
-def index_doc_element(esClient,key,document):
-    # Performs an upsert on the index
-    try:
-        retval = esClient.update(
-            id=key,
-            index='analysis',
-            doc_type='_doc',
-            body=document
-        )
-        return retval
-    except Exception as E:
-        print("Document not indexed")
-        print("Error: ",E)
-        exit(5)	
+def index_video_record(esClient, key, document):
+    routing = int(md5(bytes(key, 'utf-8')).hexdigest(), 16)%5
+    exists = esClient.exists(index=INDEX_NAME, id=key, routing=routing)
+    if not exists:
+        try: 
+            esClient.create(
+                index=INDEX_NAME,
+                id=key,
+                body=document,
+                routing=routing
+            )
+        except Exception as E:
+            print("Video not indexed")
+            print("Error: ",E)
+            exit(5)
+    return routing
 
-def gen_documents(analysisResult):
+def index_frame_record(esClient, key, document, routing):
+    print(document)
+    if not esClient.exists(index=INDEX_NAME, id=key, routing=routing):
+        try: 
+            esClient.create(
+                index=INDEX_NAME,
+                id=key,
+                body=document,
+                routing=routing
+            )
+        except Exception as E:
+            print("frame not indexed")
+            print("Error: ",E)
+            exit(5)
+    else:
+        try: 
+            esClient.update(
+                index=INDEX_NAME,
+                id=key,
+                body={"doc": document},
+                doc_type='_doc',
+                routing=routing
+            )
+        except Exception as E:
+            print("frame not indexed")
+            print("Error: ",E)
+            exit(5)
+
+def gen_video_record(anaysisResult):
+    return {
+        "S3_Key": anaysisResult['S3_Key'],
+        "FrameRate": anaysisResult['FrameRate'],
+        "JobId": anaysisResult['JobId'],
+        "doc_type": "video"
+    }
+
+def gen_documents(analysisResult, parentId):
     for timestamp in analysisResult['results'].items():
         yield {
             'S3_Key': analysisResult['S3_Key'].replace('/','-'),
-            'timestamp': int(timestamp[0]),
+            'Timestamp': int(timestamp[0]),
             analysisResult['type']:timestamp[1],
-            'JobId': analysisResult['JobId'],
-            'FrameRate': analysisResult['FrameRate']
+            'doc_type': {
+                'name': 'frame',
+                'parent': parentId
+            }
         }
 
+
+""" 
+---------------
+Indexing Lambda
+---------------
+Indexing steps:
+    # 1. Create index if not exists
+    # 2. Index video document if not exists
+    # 3. Index individual frames if not exists
+        # 3.1. Update property if frame exists
+"""
+
+ES_CLIENT = connect_es(environ['DOMAIN_ENDPOINT'])
 def lambda_handler(event, context):
-    print("Received event: " + json.dumps(event, indent=2))
-    index = {
-      "doc": {},
-      "upsert": {}
-    }
-
-    # createIndex(esClient) # In case we need to create an index
-
-    try:
-        for document in gen_documents(event):
-            index['doc'] = index['upsert'] = document
-            response = index_doc_element(
-                ES_CLIENT,
-                '{}-{}'.format(document["S3_Key"],document["timestamp"]),
-                index
-            )
-        return response
-    except Exception as e:
-        print('Failed to Index: {}'.format(e))
-        raise e
+    print("Received event: " + dumps(event, indent=2))
+    if create_index(ES_CLIENT, IndexDefinition):
+        try:
+            video_key = '{}-{}'.format(event['S3_Key'], event['FrameRate'])
+            routing = index_video_record(ES_CLIENT, video_key, gen_video_record(event))
+            for document in gen_documents(event, video_key):
+                print(document)
+                response = index_frame_record(
+                    ES_CLIENT,
+                    '{}-{}'.format(document['S3_Key'],document['Timestamp']),
+                    document,
+                    routing
+                )
+            return response
+        except Exception as e:
+            print('Failed to Index: {}'.format(e))
+            raise e
+    else:
+        print("Failed to create index")
