@@ -33,6 +33,9 @@ Parameters:
   StageName:
     Type: String
     Default: "Prod"
+  OSCDictionary:
+    Type: String
+    Default: "osc_files/dictionary.json"
 
 Globals:
   Function:
@@ -45,6 +48,7 @@ Globals:
     Environment:
       Variables:
         STAGE: !Ref StageName
+        MIN_ACCURACY: 80
 
 Resources:
   #############
@@ -328,17 +332,30 @@ Resources:
   GetAnalysisFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: api/get_analysis/
+      CodeUri: api/query_analysis/
       Handler: main.lambda_handler
       Role: !GetAtt APILambdaRole.Arn
       Environment:
         Variables:
           DDB_TABLE: !Ref DynamoDBTable
+          ANALYSIS_LIST:
+            - "osc"
+            - "bft"
+            - "bfl"
+            - "cff"
       Events:
         GetVideoAnalysis:
           Type: Api
           Properties:
-            Path: /analysis/{s3key}
+            Path: /analysis/{s3key}/{jobid}
+            Method: GET
+            RestApiId: !Ref RestAPI
+            Auth:
+              ApiKeyRequired: true
+        GetVideoAnalysisByAnalysisType:
+          Type: Api
+          Properties:
+            Path: /analysis/{s3key}/{jobid}/{analysis}
             Method: GET
             RestApiId: !Ref RestAPI
             Auth:
@@ -359,6 +376,7 @@ Resources:
           DDB_TABLE: !Ref DynamoDBTable
           DEST_S3_BUCKET: !Ref DestinationBucket
           ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
+          OSC_DICT: !Ref OSCDictionary
   BrandFromTextAnalysis:
     Type: AWS::Serverless::Function
     Properties:
