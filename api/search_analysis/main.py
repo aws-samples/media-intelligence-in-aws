@@ -6,6 +6,13 @@ from json import dumps
 from query  import small_query
 
 INDEX_NAME = 'analysis-results'
+RESPONSE_PATTERN = {
+    'isBase64Encoded':False,
+    'headers': {
+    'Access-Control-Allow-Origin': '*'
+    },
+    'body':{}
+}
 
 def connect_es(esEndPoint):
     __credentials = boto3.Session().get_credentials()
@@ -107,6 +114,9 @@ def search_documents(filters):
 def lambda_handler(event, context):
     search_results = search_documents(event)
     if search_results['hits']['total'] == 0:
-        return 'No results found!'
+        RESPONSE_PATTERN['body'] = 'No results found!'
+        RESPONSE_PATTERN['statusCode'] = "400"
     else:
-        return search_results['hits']['hits']
+        RESPONSE_PATTERN['body'] = search_results['hits']['hits']
+        RESPONSE_PATTERN['statusCode'] = "200"
+    return RESPONSE_PATTERN

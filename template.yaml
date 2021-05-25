@@ -317,16 +317,15 @@ Resources:
       Environment:
         Variables:
           DOMAIN_ENDPOINT: !GetAtt NestedStack.Outputs.ESDomainEndpoint
-          # DOMAIN_ENDPOINT: search-my-domain-yrvyusealrb5eot5icbg6lffwy.us-east-1.es.amazonaws.com
       Events:
         StartVideoAnalysis:
           Type: Api
           Properties:
             Path: /analysis/search
-            Method: GET
+            Method: POST
             RestApiId: !Ref RestAPI
             Auth:
-              ApiKeyRequired: true
+             ApiKeyRequired: true
   MediaConvertJobChecker:
     Type: AWS::Serverless::Function
     Properties:
@@ -474,7 +473,6 @@ Resources:
         Variables:
           AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
           DOMAIN_ENDPOINT: !GetAtt NestedStack.Outputs.ESDomainEndpoint
-  
 
   #####################
   #Lambda Custom Layer#
