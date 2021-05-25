@@ -13,6 +13,8 @@ TABLE = resource('dynamodb').Table(environ['DDB_TABLE'])
 SNS_TOPIC = resource('sns').Topic(environ['SNS_TOPIC'])
 
 def lambda_handler(event, context):
+    print("Processing event \n",dumps(event))
+
     JobId = event['Records'][0]['Sns']['Message']
     JobId = JobId.replace("job_id:","")
     JobId = sanitize_string(JobId)
@@ -23,38 +25,49 @@ def lambda_handler(event, context):
         print("Failed getting job id "+ JobId)
         raise Exception("No MediaConvert job found with id: "+JobId)
 
+
     mc_job = mc_job['Job']
-    print(mc_job)
 
     s3_key = mc_job['Settings']['Inputs'][0]['FileInput'].replace('s3://{}/'.format(environ['IN_S3_BUCKET']), '')
 
     Item = TABLE.query(
             IndexName='JobIdIndex',
             KeyConditionExpression = 
-                Key('S3Key').eq(s3_key) & Key('JobId').eq(JobId)
+                Key('S3Key').eq(s3_key) & Key('JobId').eq(JobId),
+            Select='ALL_ATTRIBUTES'
             )['Items'][0]
 
     if Item is False or Item == []:
         raise Exception("No item found on DynamoDB with: "+s3_key+" & "+JobId)
 
     sample_rate = int(Item['AttrType'].replace('frm/',''))
-
-    return SNS_TOPIC.publish(
-        Message=dumps(
-            {
-                "S3Key": Item['S3Key'],
-                "SampleRate": sample_rate,
-                "JobId": JobId,
-                "OutputPath": mc_job['Settings']['OutputGroups'][0]['OutputGroupSettings']['FileGroupSettings']['Destination']
+    if mc_job['Status'] == 'CANCELED' or mc_job['Status'] == 'ERROR':
+        print("MediaConvert Job failed, aborting workflow")
+        SNS_EMAIL_TOPIC = resource('sns').Topic(environ['SNS_EMAIL_TOPIC'])
+        return SNS_EMAIL_TOPIC.publish(
+            Message= " MediaConvert Job Failed for S3Key: "+s3_key+" and JobId: "+JobId +
+                     " please refer to the Elemental MediaConvert console \n " +
+                     " \n\n Job details: https://"+ environ['AWS_REGION'] +
+                     ".console.aws.amazon.com/mediaconvert/home?region="+ environ['AWS_REGION'] +
+                     "#/jobs/summary/"+JobId
+        )
+    else:
+        return SNS_TOPIC.publish(
+            Message=dumps(
+                {
+                    "S3Key": Item['S3Key'],
+                    "SampleRate": sample_rate,
+                    "JobId": JobId,
+                    "OutputPath": mc_job['Settings']['OutputGroups'][0]['OutputGroupSettings']['FileGroupSettings']['Destination']
+                }
+            ),
+            MessageAttributes={
+                'analysis': {
+                    'DataType': 'String.Array',
+                    'StringValue': dumps(Item['analysis'])
+                }
             }
-        ),
-        MessageAttributes={
-            'analysis': {
-                'DataType': 'String.Array',
-                'StringValue': dumps(Item['analysis'])
-            }
-        }
-    )
+        )
 
 
 def check_mediaconvert_job(job_id):

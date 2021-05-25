@@ -1,11 +1,16 @@
-import boto3
+from boto3 import client
 from re import sub
+from botocore import config
 
 class FaceRekognition:
-    def __init__(self,region='us-east-1'):
+    def __init__(self,region='us-east-1',config=None):
         self.name = "Face Rekognition"
         self.region = region
-        self.rekognition_client = boto3.client("rekognition")
+        if config is None:
+            self.rekognition_client = client("rekognition")
+        else:
+            self.rekognition_client = client("rekognition",config=config)
+
 
     def add_face_to_collection(self,bucket, photo_key, collection_id):
         if self.rekognition_client is False:
@@ -66,7 +71,7 @@ class FaceRekognition:
 
             if face_name not in unique_faces:
                 unique_faces[face_name] = {
-                    'total_matches':0,
+                    'total_matches':1,
                     'avg_similarity': face_results['Similarity'],
                     'avg_confidence': face['Confidence']
                 }
@@ -96,7 +101,6 @@ class FaceRekognition:
             return False
         else:
             if response['FaceDetails'] == []:
-                print("No faces found on image")
                 return False
             for face in response['FaceDetails']:
                 if face['Confidence'] >= threshold:
@@ -150,7 +154,8 @@ class FaceRekognition:
                                                                      FaceMatchThreshold=accuracy,
                                                                      MaxFaces=max_faces)
         except Exception as e:
-            print("Exception ocurred while matching the face \n", e)
+            if "There are no faces in the image" not in str(e):
+                print("Exception ocurred while matching the face \n", e)
             return False
         else:
             return response

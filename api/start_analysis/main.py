@@ -46,9 +46,15 @@ def lambda_handler(event, context):
         # Video has already been extracted
         Item = previous_extraction[0]
         print(Item)
-        mc_job = AFE.get_mediaconvert_job(Item['JobId'])['Job']
+        mc_job = AFE.get_mediaconvert_job(Item['JobId'])
         if mc_job is False:
             print("No MediaConvert Job found for the dynamo record")
+            event = start_new_analysis(event)
+            TABLE.put_item(
+                Item=event['body']
+            )
+        elif mc_job['Job']['Status'] == 'CANCELED' or mc_job['Job']['Status'] == 'ERROR':
+            print("MediaConvert Job failed for the dynamo record")
             event = start_new_analysis(event)
             TABLE.put_item(
                 Item=event['body']
@@ -64,7 +70,7 @@ def lambda_handler(event, context):
                         "S3Key": Item['S3Key'],
                         "JobId": Item['JobId'],
                         "SampleRate": event['body']['SampleRate'],
-                        "OutputPath": mc_job['Settings']['OutputGroups'][0]['OutputGroupSettings']['FileGroupSettings']['Destination']
+                        "OutputPath": mc_job['Job']['Settings']['OutputGroups'][0]['OutputGroupSettings']['FileGroupSettings']['Destination']
                     }
                 ),
                 MessageAttributes={
