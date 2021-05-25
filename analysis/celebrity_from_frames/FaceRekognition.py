@@ -101,7 +101,6 @@ class FaceRekognition:
             return False
         else:
             if response['FaceDetails'] == []:
-                print("No faces found on image")
                 return False
             for face in response['FaceDetails']:
                 if face['Confidence'] >= threshold:
@@ -155,7 +154,7 @@ class FaceRekognition:
                                                                      FaceMatchThreshold=accuracy,
                                                                      MaxFaces=max_faces)
         except Exception as e:
-            if "There are no faces in the image" not in e:
+            if "There are no faces in the image" not in str(e):
                 print("Exception ocurred while matching the face \n", e)
             return False
         else:
