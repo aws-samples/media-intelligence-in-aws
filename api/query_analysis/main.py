@@ -2,11 +2,13 @@ from os import environ
 from json import dumps,loads
 from boto3 import resource
 from boto3.dynamodb.conditions import Key
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 TABLE = resource('dynamodb').Table(environ['DDB_TABLE'])
 ANALYSIS_LIST = environ['ANALYSIS_LIST']
 
 RESPONSE_PATTERN = {
+    'statusCode':200,
     'isBase64Encoded':False,
     'headers': {
     'Access-Control-Allow-Origin': '*'
@@ -14,61 +16,164 @@ RESPONSE_PATTERN = {
 }
 
 def lambda_handler(event, context):
-    s3_key = event['queryStringParameters'].get('s3_key', None) if event['queryStringParameters'] else None
-    job_id = event['queryStringParameters'].get('jobid', None) if event['queryStringParameters'] else None
-    analysis = event['queryStringParameters'].get('analysis', None) if event['queryStringParameters'] else None
-
+    response = {
+        'msg':'',
+        'data':{}
+    }
     print('Processing event:\n'+dumps(event))
     print(ANALYSIS_LIST)
-    #body = get_video_analysis_by_uuid(uuid, s3_key)
-    #RESPONSE_PATTERN.update(body)
-    
-    #print('Response:\n', body)
-    return dumps(RESPONSE_PATTERN)
+    print('---')
+    event['body'] = loads(event['body'])
+    print('Request Body: \n', event['body'])
 
-def get_video_analysis_by_uuid(uuid, s3_key):
-    primary_key = {
-        'S3_KEY': 'test/key.mp4',
-        'ATTR_TYPE': 'ana/brand-text/1234'
+    query_spec = validate_request(event['body'])
+    if query_spec is False:
+        RESPONSE_PATTERN['statusCode'] = 400
+        response['msg'] = 'Wrong or missing parameters, verify your request'
+        RESPONSE_PATTERN['body'] = dumps(response)
+        return (RESPONSE_PATTERN)
+
+    record = query_item(query_spec)
+    if record is False:
+        RESPONSE_PATTERN['statusCode'] = 404
+        response['msg'] = 'No video analysis found with specified query attributes'
+        RESPONSE_PATTERN['body'] = dumps(response)
+        return (RESPONSE_PATTERN)
+
+    record['AnalysisPerformed'],query_results = get_analysis_dynamo_results(record,query_spec)
+
+    response['msg'] = "Query response for item " + ( '  '+ str(index) +': '+ str(value) for index,value in record.items())
+    response['data'] = query_results
+    response['data']['AnalysisPerformed'] = record['AnalysisPerformed']
+    RESPONSE_PATTERN['body'] = dumps(response)
+
+    return (RESPONSE_PATTERN)
+
+def get_analysis_dynamo_results(item,query):
+
+    all_results = {}
+
+    analysis_list = TABLE.query(
+            KeyConditionExpression=
+            Key('S3Key').eq(item['S3Key']) & Key('AttrType').eq('frm/' + str(item['SampleRate']))
+    )['Items'][0]['analysis']
+
+
+    if query['Analysis'] == 'all':
+        with ThreadPoolExecutor(max_workers=len(ANALYSIS_LIST)) as pool:
+            futures = [
+                pool.submit(
+                    get_results_by_analysis, item['S3Key'], "ana/" + analysis + "/" + item['SampleRate']
+                ) for analysis in ANALYSIS_LIST
+            ]
+            for r in as_completed(futures):
+                analysis,data = r.result()
+                if data is not False:
+                    all_results[analysis] = data
+    else:
+        analysis_base_name = "ana/" + query['Analysis'] + "/" + item['SampleRate']
+        analysis,results = get_results_by_analysis(item['S3Key'],analysis_base_name,query['Analysis'])
+        if results is not False:
+            all_results[analysis] = results
+
+    return analysis_list,all_results
+
+def validate_request(body):
+    if 'S3Key' not in body:
+        print("Missing required parameter S3Key on body")
+        return False
+
+    by_job_id = True if 'JobId' in body else False
+    by_sample_rate = True if 'SampleRate' in body else False
+    if by_job_id is False and by_sample_rate is False:
+        print("Missing required query parameters either JobId or SampleRate on request")
+        return False
+
+    query_structure = {
+        'S3Key':body['S3Key']
     }
+    if by_job_id:
+        query_structure['query_by'] = 'JobId'
+        query_structure['JobId'] = body['JobId']
+    if by_sample_rate:
+        query_structure['query_by'] = 'SampleRate'
+        query_structure['SampleRate'] = body['SampleRate']
 
-    dynamo_response = TABLE.query(
-        KeyConditionExpression = 
-            Key('S3_KEY').eq(primary_key['S3_KEY']) & Key('ATTR_TYPE').between('ana/0000000/0','ana/zzzzzzzz/100')
-    )
+    if 'Analysis' in body:
+        if body['Analysis'] != 'all' and body['Analysis'] not in ANALYSIS_LIST:
+            print("Analysis must be either 'all' or one from the list ",ANALYSIS_LIST)
+            return False
+        else:
+            query_structure['Analysis'] = body['Analysis']
+    else:
+        query_structure['Analysis'] = 'all'
 
-    print(dynamo_response['Items'])
-    print('------')
-    return {
-        'statusCode': 200,
-        'body': {
-            'msg': 'results',
-            'data': dynamo_response['Items']
-        }
+    return query_structure
+
+def query_item(query):
+    if query['query_by'] == 'JobId':
+        dynamo_record = TABLE.query(
+            IndexName='JobIdIndex',
+            KeyConditionExpression=
+            Key('S3Key').eq(query['S3Key']) & Key('JobId').eq(query['JobId'])
+        )['Items']
+    elif query['query_by'] == 'SampleRate':
+        dynamo_record = TABLE.query(
+            KeyConditionExpression=
+            Key('S3Key').eq(query['S3Key']) & Key('AttrType').eq('frm/' + str(query['SampleRate'] + '/'))
+        )['Items']
+    else:
+        return False
+
+    if dynamo_record == []:
+        return False
+    else:
+        return get_item_info(dynamo_record[0])
+
+
+def get_item_info(dynamo_record):
+    item = {
+        'S3Key':dynamo_record['S3Key'],
+        'JobId':dynamo_record['JobId'],
+        'SampleRate': get_samplerate_from_attrtype(dynamo_record['AttrType'])
     }
+    return item
 
-def get_analysis_dynamo_results(s3_key,analysis_base_name):
-    osc_results = TABLE.query(
+def get_samplerate_from_attrtype(attr_type):
+    segments =  attr_type.split('/')
+    if len(segments) == 3:
+        return segments[-1]
+    elif len(segments) == 4:
+        return segments[2]
+    else:
+        return False
+
+def get_results_by_analysis(s3_key,analysis_base_name,analysis):
+    results = TABLE.query(
         KeyConditionExpression=
         Key('S3Key').eq(s3_key) & Key('AttrType').begins_with(analysis_base_name + "0")
     )['Items']
+
+    if results == []:
+        return analysis,False
+
     all_results = []
     i = 0
     while i < 10:
-        for result in osc_results:
+        for result in results:
             if result not in all_results:
                 all_results.append(result)
 
         if i < 9:
-            osc_results = TABLE.query(
+            results = TABLE.query(
                 KeyConditionExpression=
                 Key('S3Key').eq(s3_key) & Key('AttrType').between(analysis_base_name + str(i),
                                                                   analysis_base_name + str(i + 1))
             )['Items']
         else:
-            osc_results = TABLE.query(
+            results = TABLE.query(
                 KeyConditionExpression=
                 Key('S3Key').eq(s3_key) & Key('AttrType').begins_with(analysis_base_name + str(i))
             )['Items']
         i += 1
-    return all_results
+    return analysis,all_results

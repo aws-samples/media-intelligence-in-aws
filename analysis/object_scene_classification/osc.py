@@ -202,7 +202,7 @@ def get_object_scene_labels(frame,dynamo_record,batch,min_confidence=70,name_ide
                 'S3Key': dynamo_record['S3Key'],
                 'AttrType': 'ana/osc/' + str(dynamo_record['SampleRate']) + '/{Timestamp}'.format(Timestamp=timestamp),
                 'JobId': dynamo_record['JobId'],
-                'ObjectSceneDetectedLabels': dumps(job_response['Labels']),
+                'DetectedLabels': dumps(job_response['Labels']),
                 'FrameS3Key': frame
             }
             batch.put_item(Item=individual_results)
