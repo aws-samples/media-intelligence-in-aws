@@ -32,10 +32,6 @@
     ]
   },
   "S3_Key" : "/test/nice.play",
-<<<<<<< HEAD
   "SampleRate" : 3,
-=======
-  "FrameRate" : 3,
->>>>>>> 7e4780561099000a3cc0776a438c55da54764a76
   "JobId" : "1621451119340-d2k6qs"
 }
