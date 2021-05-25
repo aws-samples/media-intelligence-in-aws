@@ -1,18 +1,26 @@
-from os import environ, terminal_size
+from os import environ
 import boto3
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 from json import dumps
+from query  import small_query
 
-credentials = boto3.Session().get_credentials()
-awsauth = AWS4Auth(credentials.access_key, credentials.secret_key, 'us-east-1', 'es', session_token=credentials.token)
+INDEX_NAME = 'analysis-results'
 
 def connect_es(esEndPoint):
+    __credentials = boto3.Session().get_credentials()
+    __awsauth = AWS4Auth(
+        __credentials.access_key,
+        __credentials.secret_key,
+        'us-east-1',
+        'es',
+        session_token=__credentials.token
+    )
     print ('Connecting to the ES Endpoint {0}'.format(esEndPoint))
     try:
         esClient = Elasticsearch(
             hosts=[{'host': esEndPoint, 'port': 443}],
-            http_auth = awsauth,
+            http_auth = __awsauth,
             use_ssl=True,
             verify_certs=True,
             connection_class=RequestsHttpConnection)
@@ -31,9 +39,9 @@ def create_queries(filters, action):
                         "path": filters[0],
                         "query": {
                             "bool": {
-                                action: list([
+                                action: [
                                     create_filter(field_type, filters[0])
-                                ] for field_type in filter_type.items())
+                                 for field_type in filter_type.items()]
                             }
                         }
                     }
@@ -48,55 +56,57 @@ def create_filter(field_type, filter_type):
         return {"match": {"{}.{}".format(filter_type, field_type[0]): field_type[1]}}
 
 def search_documents(filters):
-    transformed = {
-        "query": {
-            "bool": {
-                "must": []
-            }
-        },
-        "aggs": {
-            "by_id": {
-                "terms": {
-                    "field": "S3_Key.keyword"
-                },
-                "aggs" : {
-                    "same_ids": {
-                        "top_hits": {
-                            "size":10
-                        }
+    transformed = small_query
+
+    if 'must' in filters.keys() or 'avoid' in filters.keys():
+        transformed['query']['bool']['must'].append({
+            'has_child': {
+                'type':'frame',
+                'query': {
+                    'bool': {
+                        'must': []
                     }
-                }
+                },
+                "inner_hits": {} # To retrieve frames
             }
-        }
-    }
+        })
     if 'must' in filters.keys():
-        for filter_type in filters['must'].items():
-            transformed['query']['bool']['must'].append(
-                create_queries(filter_type, 'must')) 
+        transformed['query']['bool']['must'][0]['has_child']['query']['bool']['must'].append(
+            {'bool':
+                {'should': query for query in [create_queries(filter_type, 'must') for filter_type in filters['must'].items()]}
+            })
     if 'avoid' in filters.keys():
-        for filter_type in filters['must'].items():
-            transformed['query']['bool']['must'].append(
-                create_queries(filter_type, 'must_not')
-            )
+        transformed['query']['bool']['must'][0]['has_child']['query']['bool']['must'].append(
+            {'bool':
+                {'must_not': query for query in [create_queries(filter_type, 'should') for filter_type in filters['avoid'].items()]}
+            })
     if 'S3_Key' in filters.keys():
-        transformed['query']['bool']['must'].append(
-            {"match": {"S3_Key.keyword": filters['S3_Key']}}
-        )
+        transformed['query']['bool']['must'].append({
+            "match": {
+                "S3_Key": filters['S3_Key']
+            }
+        })
     if 'FrameRate' in filters.keys():
-        transformed['query']['bool']['must'].append(
-            {"match": {"FrameRate": filters['FrameRate']}}
+        transformed['query']['bool']['must'].append({
+            "match": {
+                "FrameRate": filters['FrameRate']
+            }
+        })
+    try:
+        search = ES_CLIENT.search(
+            index=INDEX_NAME,
+            body=transformed
         )
-    print(transformed)
-    search = ES_CLIENT.search(
-        index='analysis',
-        body=transformed
-        # filter_path=['hits.hits._id', 'hits.hits._type']
-    )
-    return search
+        return search
+    except Exception as E:
+        print("Failed to search")
+        print("======== Query ========")
+        print(dumps(transformed))
+        print(E)
+        exit(4)
 def lambda_handler(event, context):
     search_results = search_documents(event)
-    print(search_results)
     if search_results['hits']['total'] == 0:
         return 'No results found!'
     else:
-        return search_results['hits']
+        return search_results['hits']['hits']

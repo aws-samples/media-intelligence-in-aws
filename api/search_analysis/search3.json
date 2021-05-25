@@ -1,16 +1,4 @@
 {
-  "must": { 
-    "brands": [
-      {
-        "brand": "Havaianas", "accuracy": 0.2
-      }
-    ],
-    "celebrities": [
-      {
-        "celebrity": "William Bonner"
-      }
-    ]
-  },
   "avoid": {
     "scenes": [
       {
