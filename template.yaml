@@ -490,15 +490,17 @@ Resources:
   VideoAnalysisTopic:
     Type: AWS::SNS::Topic
     Properties:
-      Subscription:
-        - Endpoint:
-            !GetAtt SceneClassification.Arn
-          Protocol: "lambda"
-          FilterPolicy: '{"analysis": ["all", "osc"]}'
       TopicName: "VidAnalysisTopic"
-  bftSub:
+  oscSub:
     Type: AWS::SNS::Subscription
     Properties: 
+      Endpoint: !GetAtt SceneClassification.Arn
+      Protocol: lambda
+      FilterPolicy: '{"analysis": ["all", "osc"]}'
+      TopicArn: !Ref VideoAnalysisTopic
+  bftSub:
+    Type: AWS::SNS::Subscription
+    Properties:
       Endpoint: !GetAtt BrandFromTextAnalysis.Arn
       Protocol: lambda
       FilterPolicy: '{"analysis": ["all", "bft"]}'
