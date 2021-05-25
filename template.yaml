@@ -338,7 +338,7 @@ Resources:
       Environment:
         Variables:
           DDB_TABLE: !Ref DynamoDBTable
-          ANALYSIS_LIST: ["osc","bft","bfl","cff"]
+          ANALYSIS_LIST: "['osc','bft','bfl','cff']"
       Events:
         GetVideoAnalysis:
           Type: Api

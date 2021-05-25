@@ -19,6 +19,7 @@ def lambda_handler(event, context):
     analysis = event['queryStringParameters'].get('analysis', None) if event['queryStringParameters'] else None
 
     print('Processing event:\n'+dumps(event))
+    print(ANALYSIS_LIST)
     #body = get_video_analysis_by_uuid(uuid, s3_key)
     #RESPONSE_PATTERN.update(body)
     
