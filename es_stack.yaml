@@ -272,7 +272,7 @@ Resources:
         ZoneAwarenessConfig:
           AvailabilityZoneCount: 3
         ZoneAwarenessEnabled: true
-      ElasticsearchVersion: "6.3"
+      ElasticsearchVersion: "7.10"
       EncryptionAtRestOptions:
         Enabled: true
       NodeToNodeEncryptionOptions:
