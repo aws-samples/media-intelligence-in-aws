@@ -1,5 +1,4 @@
 from __future__ import print_function
-from pprint import pprint
 import boto3
 from json import dumps
 from elasticsearch import Elasticsearch, RequestsHttpConnection

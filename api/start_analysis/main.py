@@ -57,7 +57,7 @@ def lambda_handler(event, context):
             event['timestamp'] = time.time()
             event['body']['JobId'] = Item['JobId']
             event['body']['AttrType'] = Item['AttrType']
-            event['body']['Status']: 'SUBMITTED'
+            event['body']['Status'] = 'SUBMITTED'
             SNS_TOPIC.publish(
                 Message=dumps(
                     {
@@ -94,6 +94,6 @@ def start_new_analysis(event):
         Timestamp=timestamp
     )
     event['body']['AttrType'] = 'frm/{SampleRate}'.format(SampleRate=event['body']['SampleRate'])
-    event['body']['Status']: 'SUBMITTED'
+    event['body']['Status'] = 'SUBMITTED'
 
     return event
