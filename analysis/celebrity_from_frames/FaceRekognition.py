@@ -1,11 +1,16 @@
-import boto3
+from boto3 import client
 from re import sub
+from botocore import config
 
 class FaceRekognition:
-    def __init__(self,region='us-east-1'):
+    def __init__(self,region='us-east-1',config=None):
         self.name = "Face Rekognition"
         self.region = region
-        self.rekognition_client = boto3.client("rekognition")
+        if config is None:
+            self.rekognition_client = client("rekognition")
+        else:
+            self.rekognition_client = client("rekognition",config=config)
+
 
     def add_face_to_collection(self,bucket, photo_key, collection_id):
         if self.rekognition_client is False:
