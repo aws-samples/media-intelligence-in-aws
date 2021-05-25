@@ -74,7 +74,9 @@ def search_documents(filters):
                         'must': []
                     }
                 },
-                "inner_hits": {} # To retrieve frames
+                "inner_hits": {
+                    "size": 10
+                } # To retrieve frames
             }
         })
     if 'must' in filters.keys():
