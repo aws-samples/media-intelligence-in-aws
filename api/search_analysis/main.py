@@ -93,10 +93,10 @@ def search_documents(filters):
                 "S3_Key": filters['S3_Key']
             }
         })
-    if 'FrameRate' in filters.keys():
+    if 'SampleRate' in filters.keys():
         transformed['query']['bool']['must'].append({
             "match": {
-                "FrameRate": filters['FrameRate']
+                "SampleRate": filters['SampleRate']
             }
         })
     try:

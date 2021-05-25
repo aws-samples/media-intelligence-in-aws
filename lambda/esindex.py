@@ -91,7 +91,7 @@ def index_frame_record(esClient, key, document, routing):
 def gen_video_record(anaysisResult):
     return {
         "S3_Key": anaysisResult['S3_Key'],
-        "FrameRate": anaysisResult['FrameRate'],
+        "SampleRate": anaysisResult['SampleRate'],
         "JobId": anaysisResult['JobId'],
         "doc_type": "video"
     }
@@ -125,7 +125,7 @@ def lambda_handler(event, context):
     print("Received event: " + dumps(event, indent=2))
     if create_index(ES_CLIENT, IndexDefinition):
         try:
-            video_key = '{}-{}'.format(event['S3_Key'], event['FrameRate'])
+            video_key = '{}-{}'.format(event['S3_Key'], event['SampleRate'])
             routing = index_video_record(ES_CLIENT, video_key, gen_video_record(event))
             for document in gen_documents(event, video_key):
                 print(document)

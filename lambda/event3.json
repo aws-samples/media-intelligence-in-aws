@@ -9,6 +9,6 @@
   },
   "type": "scenes",
   "S3_Key": "havaianas.mp4",
-  "FrameRate": 1,
+  "SampleRate": 1,
   "JobId": "1621451119340-d2k6qs"
 }
