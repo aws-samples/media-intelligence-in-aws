@@ -39,7 +39,7 @@ def lambda_handler(event, context):
     message = loads(
         event['Records'][0]['Sns']['Message']
     )
-    print('Starting celebrities detection ...')
+
     s3_key = message['S3Key'].replace('s3://{}/'.format(environ['IN_S3_BUCKET']), '')
     sample_rate = message['SampleRate']
     JobId = message['JobId']
@@ -60,16 +60,14 @@ def lambda_handler(event, context):
         print("Do face detection on frames")
         frames = get_frames_list_s3(S3_BUCKET,frame_output_path)
     else:
-        osc_results = TABLE.query(
-            KeyConditionExpression=
-            Key('S3Key').eq(s3_key) & Key('AttrType').begins_with(analysis_base_name)
-        )['Items']
+        osc_results = get_analysis_dynamo_results(s3_key,analysis_base_name)
         if osc_results == [] or osc_results is False:
             print("No results saved on dynamo, proceeding face rekognition with all frames")
             frames = get_frames_list_s3(environ['DEST_S3_BUCKET'], frame_output_path)
         else:
             frames = get_frames_list_osc(osc_results)
-
+    print('Starting celebrities detection ...')
+    print("Analyzing "+str(len(frames))+" frames")
     celebrity_rekognition = detect_celebrities_from_frames(frames,dynamo_record)
 
     response['body']['data'] = celebrity_rekognition
@@ -228,7 +226,6 @@ def get_celebrities_from_frame(frame,dynamo_record,batch,identifier = '_frame_',
 
     faces = FACE_REKOGNITION.detect_faces_in_image(environ['DEST_S3_BUCKET'], frame)
     if faces is False or faces == []:
-        print("No faces found on frame " + frame)
         return frame_timestamp,False,False
 
     image_raw = S3_BUCKET.Object(frame).get().get('Body').read()
@@ -281,7 +278,8 @@ def get_celebrities_from_frame(frame,dynamo_record,batch,identifier = '_frame_',
             'FrameS3Key': frame
         }
         batch.put_item(Item=individual_results)
-        return frame_timestamp,prepare_elasticsearch_results(frame_celebrities)
+        celebs,sentiments = prepare_elasticsearch_results(frame_celebrities)
+        return frame_timestamp,celebs,sentiments
     return frame_timestamp,False,False
 
 def prepare_elasticsearch_results(results):
