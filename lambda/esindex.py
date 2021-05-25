@@ -123,19 +123,20 @@ Indexing steps:
 ES_CLIENT = connect_es(environ['DOMAIN_ENDPOINT'])
 def lambda_handler(event, context):
     print("Received event: " + dumps(event, indent=2))
+    responses = []
     if create_index(ES_CLIENT, IndexDefinition):
         try:
             video_key = '{}-{}'.format(event['S3_Key'], event['SampleRate'])
             routing = index_video_record(ES_CLIENT, video_key, gen_video_record(event))
             for document in gen_documents(event, video_key):
                 print(document)
-                response = index_frame_record(
+                responses.append(index_frame_record(
                     ES_CLIENT,
                     '{}-{}'.format(document['S3_Key'],document['Timestamp']),
                     document,
                     routing
-                )
-            return response
+                ))
+            return responses
         except Exception as e:
             print('Failed to Index: {}'.format(e))
             raise e

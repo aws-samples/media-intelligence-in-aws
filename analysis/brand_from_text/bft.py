@@ -107,6 +107,8 @@ def lambda_handler(event, context):
         Payload=dumps({
             'results': es_results,
             'type': 'brands',
+            'JobId': message['JobId'],
+            'SampleRate': message['SampleRate'],
             'S3_Key': message['S3Key']
         })
     )
