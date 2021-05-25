@@ -78,6 +78,8 @@ def lambda_handler(event, context):
         print("Celebirty rekognition FAILED")
         return response
 
+    print(CELEBRITIES_DETECTED)
+    print(SENTIMENTS_DETECTED)
     index_celebrities = invoke_elasticsearch_index_lambda(CELEBRITIES_DETECTED,'celebrities',message)
     index_sentiments = invoke_elasticsearch_index_lambda(SENTIMENTS_DETECTED,'sentiments',message)
 
