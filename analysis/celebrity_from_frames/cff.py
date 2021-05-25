@@ -229,14 +229,14 @@ def get_celebrities_from_frame(frame,dynamo_record,batch,identifier = '_frame_',
     faces = FACE_REKOGNITION.detect_faces_in_image(environ['DEST_S3_BUCKET'], frame)
     if faces is False or faces == []:
         print("No faces found on frame " + frame)
-        return False
+        return frame_timestamp,False,False
 
     image_raw = S3_BUCKET.Object(frame).get().get('Body').read()
     image = cv2.cvtColor(cv2.imdecode(np.asarray(bytearray(image_raw), dtype="uint8"), cv2.IMREAD_UNCHANGED),
                          cv2.COLOR_BGR2RGB)
     if image is None:
         print("Unable to load image on CV2, further analysis cannot be completed for the frame")
-        return False
+        return frame_timestamp,False,False
     frame_celebrities = {}
     for face in faces:
         bounding_box = face['BoundingBox']
@@ -254,7 +254,6 @@ def get_celebrities_from_frame(frame,dynamo_record,batch,identifier = '_frame_',
         celebs_found = FACE_REKOGNITION.detect_faces_from_collection(collection_id=COLLECTION_ID,
                                                                      blob=face_to_bytes)
         if celebs_found is False:
-            print("No celebs found or error occurred")
             continue
         if celebs_found['FaceMatches'] != []:
             celebrities = FACE_REKOGNITION.celeb_names_in_image(celebs_found['FaceMatches'], threshold,
