@@ -93,7 +93,7 @@ class AudioFrameExtractor:
                         "SlowPal": "DISABLED",
                         "EntropyEncoding": "CABAC",
                         "Bitrate": 10000,
-                        "SampleRateControl": "INITIALIZE_FROM_SOURCE",
+                        "FramerateControl": "INITIALIZE_FROM_SOURCE",
                         "RateControlMode": "CBR",
                         "CodecProfile": "MAIN",
                         "Telecine": "NONE",
@@ -103,7 +103,7 @@ class AudioFrameExtractor:
                         "FieldEncoding": "PAFF",
                         "SceneChangeDetect": "ENABLED",
                         "QualityTuningLevel": "SINGLE_PASS",
-                        "SampleRateConversionAlgorithm": "DUPLICATE_DROP",
+                        "FramerateConversionAlgorithm": "DUPLICATE_DROP",
                         "UnregisteredSeiTimecode": "DISABLED",
                         "GopSizeUnits": "FRAMES",
                         "ParControl": "INITIALIZE_FROM_SOURCE",
@@ -155,8 +155,8 @@ class AudioFrameExtractor:
                 "CodecSettings": {
                     "Codec": "FRAME_CAPTURE",
                     "FrameCaptureSettings": {
-                        "SampleRateNumerator": sample_rate_numerator,
-                        "SampleRateDenominator": sample_rate_denominator,
+                        "FramerateNumerator": sample_rate_numerator,
+                        "FramerateDenominator": sample_rate_denominator,
                         "MaxCaptures": 10000000,
                         "Quality": 100
                     }
