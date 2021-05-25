@@ -21,8 +21,8 @@ S3_BUCKET = resource('s3').Bucket(environ['DEST_S3_BUCKET'])
 COLLECTION_ID = environ['CELEBRITY_COLLECTION_ID']
 LAMBDA = client('lambda')
 EMOTION_RATE = 15
-CELEBRITIES_DETECTED = []
-SENTIMENTS_DETECTED = []
+CELEBRITIES_DETECTED = {}
+SENTIMENTS_DETECTED = {}
 
 def lambda_handler(event, context):
 
@@ -188,10 +188,6 @@ def get_analysis_dynamo_results(s3_key,analysis_base_name):
     i = 0
     while i < 10:
         for result in osc_results:
-            frame_number = result["AttrType"].split('/')[-1]
-            frame_name = (result['FrameS3Key'].split('/')[-1]).replace('.jpg', '')
-            frame_nn = int(frame_name.split('.')[-1])
-            print(frame_nn)
             if result not in all_results:
                 all_results.append(result)
 

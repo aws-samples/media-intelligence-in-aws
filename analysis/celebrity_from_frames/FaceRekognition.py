@@ -155,7 +155,8 @@ class FaceRekognition:
                                                                      FaceMatchThreshold=accuracy,
                                                                      MaxFaces=max_faces)
         except Exception as e:
-            print("Exception ocurred while matching the face \n", e)
+            if "There are no faces in the image" not in e:
+                print("Exception ocurred while matching the face \n", e)
             return False
         else:
             return response
