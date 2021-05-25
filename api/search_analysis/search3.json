@@ -1,0 +1,16 @@
+{
+  "avoid": {
+    "scenes": [
+      {
+        "scene": "beach"
+      }
+    ],
+    "celebrities" : [
+      {
+        "celebrity" : "Luciano Hulk"
+      }
+    ]
+  },
+  "S3Key": "havaianas.mp4",
+  "FrameRate": 1
+}

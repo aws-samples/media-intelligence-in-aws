@@ -1,0 +1,28 @@
+{
+  "results": {
+    "29699": [
+      {
+        "celebrity": "Luciano Hulk",
+        "accuracy": 1.0
+      },
+      {
+        "celebrity": "Raul Gil",
+        "accuracy": 0.97
+      }
+    ],
+    "30699": [
+      {
+        "celebrity": "William Bonner",
+        "accuracy": 0.60
+      },
+      {
+        "celebrity": "Fatima Bernardes",
+        "accuracy": 0.85
+      }
+    ]
+  },
+  "type": "celebrities",
+  "S3_Key": "havaianas.mp4",
+  "FrameRate": 1,
+  "JobId": "1621451119340-d2k6qs"
+}

@@ -1,0 +1,37 @@
+{
+  "must": { 
+    "brands": [
+      {
+        "brand": "itau", "accuracy": 0.7
+      },
+      {
+        "brand": "mercedes"
+      }
+    ],
+    "celebrities": [
+      {
+        "celebrity": "celeb1"
+      }
+    ],
+    "scenes": [
+      {
+        "scene": "beach"
+      }
+    ],
+    "sentiments": [
+      { 
+        "sentiment": "happy" 
+      }
+    ] 
+  },
+  "avoid": {
+    "sentiments": [
+      { 
+        "sentiment": "sadness"
+      }
+    ]
+  },
+  "S3_Key" : "/test/nice.play",
+  "FrameRate" : 3,
+  "JobId" : "1621451119340-d2k6qs"
+}

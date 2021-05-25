@@ -5,11 +5,11 @@ Parameters:
   ESDomainName:
     Type: String
     Description: Amazon ElasticSearch Domain name
-    Default: 'globo-dpp-es'
+    Default: 'globo-dpp-es-domain'
   CognitoDomainName:
     Type: String
     Description: Amazon Cognito Domain name (Has to be unique)
-    Default: 'globo-dpp-kibana'
+    Default: 'globo-dpp-kibana-es'
 
 Resources:
   lambdaeskibanaLambdaFunctionServiceRole3CAA4E89:
@@ -272,7 +272,7 @@ Resources:
         ZoneAwarenessConfig:
           AvailabilityZoneCount: 3
         ZoneAwarenessEnabled: true
-      ElasticsearchVersion: "6.3"
+      ElasticsearchVersion: "7.10"
       EncryptionAtRestOptions:
         Enabled: true
       NodeToNodeEncryptionOptions:
