@@ -74,7 +74,9 @@ def search_documents(filters):
                         'must': []
                     }
                 },
-                "inner_hits": {} # To retrieve frames
+                "inner_hits": {
+                    "size": 10
+                } # To retrieve frames
             }
         })
     if 'must' in filters.keys():
@@ -93,10 +95,10 @@ def search_documents(filters):
                 "S3_Key": filters['S3_Key']
             }
         })
-    if 'FrameRate' in filters.keys():
+    if 'SampleRate' in filters.keys():
         transformed['query']['bool']['must'].append({
             "match": {
-                "FrameRate": filters['FrameRate']
+                "SampleRate": filters['SampleRate']
             }
         })
     try:

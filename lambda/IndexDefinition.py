@@ -56,7 +56,7 @@ IndexDefinition = {
             }
         }
       },
-      "FrameRate": {
+      "SampleRate": {
         "type": "integer"
       },
       "Timestamp": {
