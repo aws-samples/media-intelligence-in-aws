@@ -18,5 +18,198 @@
         "MessageAttributes": {}
       }
     }
-  ]
+  ],
+  "smg": {
+    "AccelerationSettings": {
+      "Mode": "DISABLED"
+    },
+    "AccelerationStatus": "NOT_APPLICABLE",
+    "Arn": "arn:aws:mediaconvert:us-east-1:728516303426:jobs/1621536076983-65bo8a",
+    "CreatedAt": 45646546,
+    "ErrorCode": 1401,
+    "ErrorMessage": "Unable to write to output file [s3://globo-dev/videos/analysis/360p-amor-de-m-e.mp4/2/1621536076.8631272/360p-amor-de-m-e_frame_.0000000.jpg]: [Failed to write data: Access Denied]",
+    "Id": "1621536076983-65bo8a",
+    "Messages": {
+      "Info": [],
+      "Warning": []
+    },
+    "Priority": 0,
+    "Queue": "arn:aws:mediaconvert:us-east-1:728516303426:queues/Default",
+    "Role": "arn:aws:iam::728516303426:role/globo-dpp-MediaConvertS3Role-1KO8NST1QFE9Y",
+    "Settings": {
+      "Inputs": [
+        {
+          "AudioSelectors": {
+            "Audio Selector 1": {
+              "DefaultSelection": "DEFAULT",
+              "Offset": 0,
+              "ProgramSelection": 1
+            }
+          },
+          "DeblockFilter": "DISABLED",
+          "DenoiseFilter": "DISABLED",
+          "FileInput": "s3://globo-data-copy/videos/360p-amor-de-m-e.mp4",
+          "FilterEnable": "AUTO",
+          "FilterStrength": 0,
+          "PsiControl": "USE_PSI",
+          "TimecodeSource": "EMBEDDED",
+          "VideoSelector": {
+            "ColorSpace": "FOLLOW"
+          }
+        }
+      ],
+      "OutputGroups": [
+        {
+          "CustomName": "",
+          "Name": "File Group",
+          "OutputGroupSettings": {
+            "FileGroupSettings": {
+              "Destination": "s3://globo-dev/videos/analysis/360p-amor-de-m-e.mp4/2/1621536076.8631272/"
+            },
+            "Type": "FILE_GROUP_SETTINGS"
+          },
+          "Outputs": [
+            {
+              "AudioDescriptions": [
+                {
+                  "AudioSourceName": "Audio Selector 1",
+                  "AudioTypeControl": "FOLLOW_INPUT",
+                  "CodecSettings": {
+                    "AacSettings": {
+                      "AudioDescriptionBroadcasterMix": "NORMAL",
+                      "Bitrate": 96000,
+                      "CodecProfile": "LC",
+                      "CodingMode": "CODING_MODE_2_0",
+                      "RateControlMode": "CBR",
+                      "RawFormat": "NONE",
+                      "SampleRate": 48000,
+                      "Specification": "MPEG4"
+                    },
+                    "Codec": "AAC"
+                  },
+                  "LanguageCodeControl": "FOLLOW_INPUT"
+                }
+              ],
+              "ContainerSettings": {
+                "Container": "MP4",
+                "Mp4Settings": {
+                  "CslgAtom": "INCLUDE",
+                  "CttsVersion": 0,
+                  "FreeSpaceBox": "EXCLUDE",
+                  "MoovPlacement": "PROGRESSIVE_DOWNLOAD"
+                }
+              },
+              "Extension": "mp3",
+              "NameModifier": "_audio",
+              "VideoDescription": {
+                "AfdSignaling": "NONE",
+                "AntiAlias": "ENABLED",
+                "CodecSettings": {
+                  "Codec": "H_264",
+                  "H264Settings": {
+                    "AdaptiveQuantization": "AUTO",
+                    "Bitrate": 10000,
+                    "CodecLevel": "AUTO",
+                    "CodecProfile": "MAIN",
+                    "DynamicSubGop": "STATIC",
+                    "EntropyEncoding": "CABAC",
+                    "FieldEncoding": "PAFF",
+                    "FramerateControl": "INITIALIZE_FROM_SOURCE",
+                    "FramerateConversionAlgorithm": "DUPLICATE_DROP",
+                    "GopBReference": "DISABLED",
+                    "GopClosedCadence": 1,
+                    "GopSize": 90.0,
+                    "GopSizeUnits": "FRAMES",
+                    "InterlaceMode": "PROGRESSIVE",
+                    "MinIInterval": 0,
+                    "NumberBFramesBetweenReferenceFrames": 2,
+                    "NumberReferenceFrames": 3,
+                    "ParControl": "INITIALIZE_FROM_SOURCE",
+                    "QualityTuningLevel": "SINGLE_PASS",
+                    "RateControlMode": "CBR",
+                    "RepeatPps": "DISABLED",
+                    "SceneChangeDetect": "ENABLED",
+                    "Slices": 1,
+                    "SlowPal": "DISABLED",
+                    "Softness": 0,
+                    "Syntax": "DEFAULT",
+                    "Telecine": "NONE",
+                    "UnregisteredSeiTimecode": "DISABLED"
+                  }
+                },
+                "ColorMetadata": "INSERT",
+                "DropFrameTimecode": "ENABLED",
+                "RespondToAfd": "NONE",
+                "ScalingBehavior": "DEFAULT",
+                "Sharpness": 50,
+                "TimecodeInsertion": "DISABLED"
+              }
+            },
+            {
+              "AudioDescriptions": [
+                {
+                  "AudioSourceName": "Audio Selector 1",
+                  "AudioTypeControl": "FOLLOW_INPUT",
+                  "CodecSettings": {
+                    "AacSettings": {
+                      "AudioDescriptionBroadcasterMix": "NORMAL",
+                      "Bitrate": 96000,
+                      "CodecProfile": "LC",
+                      "CodingMode": "CODING_MODE_2_0",
+                      "RateControlMode": "CBR",
+                      "RawFormat": "NONE",
+                      "SampleRate": 48000,
+                      "Specification": "MPEG4"
+                    },
+                    "Codec": "AAC"
+                  },
+                  "LanguageCodeControl": "FOLLOW_INPUT"
+                }
+              ],
+              "ContainerSettings": {
+                "Container": "MP4",
+                "Mp4Settings": {
+                  "CslgAtom": "INCLUDE",
+                  "CttsVersion": 0,
+                  "FreeSpaceBox": "EXCLUDE",
+                  "MoovPlacement": "PROGRESSIVE_DOWNLOAD"
+                }
+              }
+            },
+            {
+              "ContainerSettings": {
+                "Container": "RAW"
+              },
+              "NameModifier": "_frame_",
+              "VideoDescription": {
+                "AntiAlias": "ENABLED",
+                "CodecSettings": {
+                  "Codec": "FRAME_CAPTURE",
+                  "FrameCaptureSettings": {
+                    "FramerateDenominator": 1,
+                    "FramerateNumerator": 2,
+                    "MaxCaptures": 10000000,
+                    "Quality": 100
+                  }
+                },
+                "ColorMetadata": "INSERT",
+                "DropFrameTimecode": "ENABLED",
+                "ScalingBehavior": "DEFAULT",
+                "Sharpness": 50,
+                "TimecodeInsertion": "DISABLED"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "Status": "ERROR",
+    "StatusUpdateInterval": "SECONDS_60",
+    "Timing": {
+      "FinishTime": 64,
+      "StartTime": 7878,
+      "SubmitTime": 78
+    },
+    "UserMetadata": {}
+  }
 }
