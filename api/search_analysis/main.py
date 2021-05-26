@@ -120,8 +120,8 @@ def lambda_handler(event, context):
     
     if search_results['hits']['total'] == 0:
         RESPONSE_PATTERN['body'] = 'No results found!'
-        RESPONSE_PATTERN['statusCode'] = "400"
+        RESPONSE_PATTERN['statusCode'] = 400
     else:
-        RESPONSE_PATTERN['body'] = search_results['hits']['hits']
-        RESPONSE_PATTERN['statusCode'] = "200"
+        RESPONSE_PATTERN['body'] = dumps(search_results['hits']['hits'])
+        RESPONSE_PATTERN['statusCode'] = 200
     return RESPONSE_PATTERN
