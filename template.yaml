@@ -325,7 +325,8 @@ Resources:
       Role: !GetAtt LambdaMediaConvertRole.Arn
       Environment:
         Variables:
-          DOMAIN_ENDPOINT: !GetAtt NestedStack.Outputs.ESDomainEndpoint
+          # DOMAIN_ENDPOINT: !GetAtt NestedStack.Outputs.ESDomainEndpoint
+          DOMAIN_ENDPOINT: search-my-domain-ydbig7vrkadrvj5ijpzelztv2e.us-east-1.es.amazonaws.com
       Events:
         StartVideoAnalysis:
           Type: Api
@@ -396,6 +397,20 @@ Resources:
           DEST_S3_BUCKET: !Ref DestinationBucket
           SIM_THRESHOLD: 0.7
           ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
+  BrandFromLogoAnalysis:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: analysis/brand_from_logo/
+      Handler: bfl.lambda_handler
+      Role: !GetAtt LambdaRekognitionRole.Arn
+      Environment:
+        Variables:
+          DDB_TABLE: !Ref DynamoDBTable
+          IN_S3_BUCKET: !Ref S3Bucket
+          DEST_S3_BUCKET: !Ref DestinationBucket
+          CONFIDENCE_THRESHOLD: 50.0
+          ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
+          MODEL_ARN: arn:aws:rekognition:us-east-1:728516303426:project/globo-brands-cl/version/globo-brands-cl.2021-04-20T09.07.16/1618920437011
   CelebritiesFromFramesAnalysis:
     Type: AWS::Serverless::Function
     Properties:
@@ -463,7 +478,6 @@ Resources:
         Variables:
           AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
           DOMAIN_ENDPOINT: !GetAtt NestedStack.Outputs.ESDomainEndpoint
-
   #####################
   #Lambda Custom Layer#
   #####################
@@ -511,6 +525,13 @@ Resources:
       Endpoint: !GetAtt CelebritiesFromFramesAnalysis.Arn
       Protocol: lambda
       FilterPolicy: '{"analysis":["all","cff"]}'
+      TopicArn: !Ref VideoAnalysisTopic
+  bflSub:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt BrandFromLogoAnalysis.Arn
+      Protocol: lambda
+      FilterPolicy: '{"analysis":["all","bfl"]}'
       TopicArn: !Ref VideoAnalysisTopic
   EmailTopic:
     Type: AWS::SNS::Topic
