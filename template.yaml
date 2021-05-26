@@ -368,11 +368,11 @@ Resources:
     Properties:
       CodeUri: api/search_analysis/
       Handler: main.lambda_handler
-      Role: !GetAtt LambdaMediaConvertRole.Arn
+      Role: !GetAtt ElasticSearchLambdaRole.Arn
       Environment:
         Variables:
-          # DOMAIN_ENDPOINT: !GetAtt NestedStack.Outputs.ESDomainEndpoint
-          DOMAIN_ENDPOINT: search-my-domain-ydbig7vrkadrvj5ijpzelztv2e.us-east-1.es.amazonaws.com
+          DOMAIN_ENDPOINT: !GetAtt NestedStack.Outputs.ESDomainEndpoint
+          #DOMAIN_ENDPOINT: search-my-domain-ydbig7vrkadrvj5ijpzelztv2e.us-east-1.es.amazonaws.com
       Events:
         StartVideoAnalysis:
           Type: Api
@@ -501,6 +501,13 @@ Resources:
       Principal: "sns.amazonaws.com"
       SourceArn: !Ref VideoAnalysisTopic
       FunctionName: !GetAtt CelebritiesFromFramesAnalysis.Arn
+  BrandsFromLogoLambdaInvokePermissions:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: "lambda:InvokeFunction"
+      Principal: "sns.amazonaws.com"
+      SourceArn: !Ref VideoAnalysisTopic
+      FunctionName: !GetAtt BrandFromLogoAnalysis.Arn
   #################
   # ElasticSearch #
   #################
