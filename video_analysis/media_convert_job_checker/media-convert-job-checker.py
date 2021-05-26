@@ -51,9 +51,9 @@ def lambda_handler(event, context):
     if mc_job['Status'] == 'CANCELED' or mc_job['Status'] == 'ERROR':
         print("MediaConvert Job failed, aborting workflow")
         new_item['Status'] = 'FAILED'
-        TABLE.put_item(Item={
+        TABLE.put_item(Item=
             new_item
-        })
+        )
         SNS_EMAIL_TOPIC = resource('sns').Topic(environ['SNS_EMAIL_TOPIC'])
         return SNS_EMAIL_TOPIC.publish(
             Message= " MediaConvert Job Failed for S3Key: "+s3_key+" and JobId: "+JobId +
@@ -64,9 +64,9 @@ def lambda_handler(event, context):
         )
     else:
         new_item['Status'] = 'MediaConvert COMPLETED'
-        TABLE.put_item(Item={
+        TABLE.put_item(Item=
             new_item
-        })
+        )
         return SNS_TOPIC.publish(
             Message=dumps(
                 {
