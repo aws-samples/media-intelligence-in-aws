@@ -2,7 +2,7 @@ from os import environ
 import boto3
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
-from json import dumps
+from json import dumps, loads
 from query  import small_query
 
 INDEX_NAME = 'analysis-results'
@@ -114,7 +114,10 @@ def search_documents(filters):
         print(E)
         exit(4)
 def lambda_handler(event, context):
-    search_results = search_documents(event)
+    search = loads(event['body'])
+    print(f'Processing search: \n {dumps(search)}')
+    search_results = search_documents(loads(event['body']))
+    
     if search_results['hits']['total'] == 0:
         RESPONSE_PATTERN['body'] = 'No results found!'
         RESPONSE_PATTERN['statusCode'] = "400"
