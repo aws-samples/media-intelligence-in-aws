@@ -362,16 +362,8 @@ Resources:
         GetVideoAnalysis:
           Type: Api
           Properties:
-            Path: /analysis/{s3key}/{jobid}
-            Method: GET
-            RestApiId: !Ref RestAPI
-            Auth:
-              ApiKeyRequired: true
-        GetVideoAnalysisByAnalysisType:
-          Type: Api
-          Properties:
-            Path: /analysis/{s3key}/{jobid}/{analysis}
-            Method: GET
+            Path: /analysis/
+            Method: POST
             RestApiId: !Ref RestAPI
             Auth:
               ApiKeyRequired: true
@@ -512,14 +504,17 @@ Resources:
   VideoAnalysisTopic:
     Type: AWS::SNS::Topic
     Properties:
-      Subscription:
-        - Endpoint:
-            !GetAtt SceneClassification.Arn
-          Protocol: "lambda"
       TopicName: "VidAnalysisTopic"
-  bftSub:
+  oscSub:
     Type: AWS::SNS::Subscription
     Properties: 
+      Endpoint: !GetAtt SceneClassification.Arn
+      Protocol: lambda
+      FilterPolicy: '{"analysis": ["all", "osc"]}'
+      TopicArn: !Ref VideoAnalysisTopic
+  bftSub:
+    Type: AWS::SNS::Subscription
+    Properties:
       Endpoint: !GetAtt BrandFromTextAnalysis.Arn
       Protocol: lambda
       FilterPolicy: '{"analysis": ["all", "bft"]}'

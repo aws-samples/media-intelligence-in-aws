@@ -169,10 +169,10 @@ def get_frames_list_s3(s3_bucket,output_path):
 def get_frames_list_osc(osc_results):
     frame_list = []
     for object_result in osc_results:
-        if 'ObjectSceneDetectedLabels' not in object_result:
+        if 'DetectedLabels' not in object_result:
             continue
-        #print(object_result['ObjectSceneDetectedLabels'])
-        object_scene_labels = loads(object_result['ObjectSceneDetectedLabels'])
+        #print(object_result['DetectedLabels'])
+        object_scene_labels = loads(object_result['DetectedLabels'])
         for object_scene_label in object_scene_labels:
             if object_scene_label['Name'] == 'Face' or object_scene_label['Name'] == 'Person':
                 frame_list.append(object_result['FrameS3Key'])
@@ -270,7 +270,7 @@ def get_celebrities_from_frame(frame,dynamo_record,batch,identifier = '_frame_',
             'S3Key': dynamo_record['S3Key'],
             'AttrType': dynamo_base_name,
             'JobId': dynamo_record['JobId'],
-            'CelebritiesDetected': dumps(frame_celebrities),
+            'DetectedLabels': dumps(frame_celebrities),
             'FrameS3Key': frame
         }
         batch.put_item(Item=individual_results)
