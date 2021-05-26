@@ -268,6 +268,52 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
                   - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
+  ElasticSearchLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+      Policies:
+        - PolicyName: LambdaElastiSearchRolePolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${S3Bucket}/*"
+                  - !Sub "arn:aws:s3:::${DestinationBucket}/*"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - arn:aws:logs:*:*:*:*
+              - Effect: Allow
+                Action:
+                  - dynamodb:Get*
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource:
+                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
+                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
+              - Effect: Allow
+                Action:
+                  - es:ESHttpPost
+                Resource:
+                  - "*"
+
   ####################
   #        API       #
   ####################
@@ -454,6 +500,13 @@ Resources:
       Principal: "sns.amazonaws.com"
       SourceArn: !Ref VideoAnalysisTopic
       FunctionName: !GetAtt CelebritiesFromFramesAnalysis.Arn
+  BrandsFromLogoLambdaInvokePermissions:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: "lambda:InvokeFunction"
+      Principal: "sns.amazonaws.com"
+      SourceArn: !Ref VideoAnalysisTopic
+      FunctionName: !GetAtt BrandFromLogoAnalysis.Arn
   #################
   # ElasticSearch #
   #################
