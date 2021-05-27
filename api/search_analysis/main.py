@@ -3,7 +3,6 @@ import boto3
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 from json import dumps, loads
-from query  import small_query
 
 INDEX_NAME = 'analysis-results'
 RESPONSE_PATTERN = {
@@ -63,7 +62,13 @@ def create_filter(field_type, filter_type):
         return {"match": {"{}.{}".format(filter_type, field_type[0]): field_type[1]}}
 
 def search_documents(filters):
-    transformed = small_query.copy()
+    transformed = {
+        "query": {
+            "bool": {
+                "must": []
+            }
+        }
+    }
 
     if 'must' in filters.keys() or 'avoid' in filters.keys():
         transformed['query']['bool']['must'].append({
@@ -74,8 +79,8 @@ def search_documents(filters):
                         'must': []
                     }
                 },
-                "inner_hits": {
-                    "size": 10
+                'inner_hits': {
+                    'size': 10
                 } # To retrieve frames
             }
         })
@@ -102,6 +107,7 @@ def search_documents(filters):
             }
         })
     try:
+        print(transformed)
         search = ES_CLIENT.search(
             index=INDEX_NAME,
             body=transformed
@@ -116,7 +122,7 @@ def search_documents(filters):
 def lambda_handler(event, context):
     search = loads(event['body'])
     print(f'Processing search: \n {dumps(search)}')
-    search_results = search_documents(loads(event['body']))
+    search_results = search_documents(search)
     
     if search_results['hits']['total'] == 0:
         RESPONSE_PATTERN['body'] = 'No results found!'
