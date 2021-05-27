@@ -63,7 +63,7 @@ def create_filter(field_type, filter_type):
         return {"match": {"{}.{}".format(filter_type, field_type[0]): field_type[1]}}
 
 def search_documents(filters):
-    transformed = small_query
+    transformed = small_query.copy()
 
     if 'must' in filters.keys() or 'avoid' in filters.keys():
         transformed['query']['bool']['must'].append({
