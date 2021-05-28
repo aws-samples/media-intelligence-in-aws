@@ -223,6 +223,11 @@ Resources:
                   - lambda:InvokeFunction
                 Resource:
                   - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*"
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource:
+                  - !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"
   APILambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -429,6 +434,7 @@ Resources:
           DEST_S3_BUCKET: !Ref DestinationBucket
           ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
           OSC_DICT: !Ref OSCDictionary
+          SNS_EMAIL_TOPIC: !Ref EmailTopic
   BrandFromTextAnalysis:
     Type: AWS::Serverless::Function
     Properties:
@@ -442,6 +448,7 @@ Resources:
           DEST_S3_BUCKET: !Ref DestinationBucket
           SIM_THRESHOLD: 0.7
           ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
+          SNS_EMAIL_TOPIC: !Ref EmailTopic
   BrandFromLogoAnalysis:
     Type: AWS::Serverless::Function
     Properties:
@@ -455,6 +462,7 @@ Resources:
           DEST_S3_BUCKET: !Ref DestinationBucket
           CONFIDENCE_THRESHOLD: 50.0
           ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
+          SNS_EMAIL_TOPIC: !Ref EmailTopic
           MODEL_ARN: arn:aws:rekognition:us-east-1:728516303426:project/globo-brands-cl/version/globo-brands-cl.2021-04-20T09.07.16/1618920437011
   CelebritiesFromFramesAnalysis:
     Type: AWS::Serverless::Function
@@ -469,6 +477,7 @@ Resources:
           DEST_S3_BUCKET: !Ref DestinationBucket
           CELEBRITY_COLLECTION_ID: !Ref CelebrityCollectionID
           ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
+          SNS_EMAIL_TOPIC: !Ref EmailTopic
   ######################
   # Lambda Permissions #
   ######################

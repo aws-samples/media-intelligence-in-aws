@@ -61,12 +61,14 @@ def lambda_handler(event, context):
     index_scenes = invoke_elasticsearch_index_lambda(scenes,'scenes',message)
     index_sentiments = invoke_elasticsearch_index_lambda(sentiments,'sentiments',message)
 
-    print("Completed labels: "+str(len(LABELS_DETECTED)))
-    print("No labels: "+str(len(NO_LABELS)))
-    print("Failed frames : "+str(len(FAILED_FRAMES)))
+    SNS_EMAIL_TOPIC = resource('sns').Topic(environ['SNS_EMAIL_TOPIC'])
+    return SNS_EMAIL_TOPIC.publish(
+        Message=" Object & Scene Classification ready for S3Key: " + s3_key + " and JobId: " + JobId +
+                "\n Completed labeled frames: "+str(len(LABELS_DETECTED))  +
+                "\n No labels in frames: "+str(len(NO_LABELS)) +
+                "\n Failed frames : "+str(len(FAILED_FRAMES))
+    )
 
-
-    return response
 
 def start_rekognition_label_job(dynamo_record,output_path,start_from="",lambda_arn=""):
     response = {}

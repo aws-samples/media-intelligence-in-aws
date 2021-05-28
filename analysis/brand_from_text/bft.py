@@ -121,3 +121,8 @@ def lambda_handler(event, context):
         'DetectedLabels': dumps(frames),
         'ESIndexResult': es_results
     })
+
+    SNS_EMAIL_TOPIC = resource('sns').Topic(environ['SNS_EMAIL_TOPIC'])
+    return SNS_EMAIL_TOPIC.publish(
+        Message=" Brand from Text ready for S3Key: " + s3_key + " and JobId: " + JobId
+    )

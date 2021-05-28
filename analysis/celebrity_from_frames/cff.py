@@ -76,12 +76,16 @@ def lambda_handler(event, context):
         print("Celebirty rekognition FAILED")
         return response
 
-    print(CELEBRITIES_DETECTED)
-    print(SENTIMENTS_DETECTED)
     index_celebrities = invoke_elasticsearch_index_lambda(CELEBRITIES_DETECTED,'celebrities',message)
     index_sentiments = invoke_elasticsearch_index_lambda(SENTIMENTS_DETECTED,'sentiments',message)
 
-    return response
+    SNS_EMAIL_TOPIC = resource('sns').Topic(environ['SNS_EMAIL_TOPIC'])
+    return SNS_EMAIL_TOPIC.publish(
+        Message=" Object & Scene Classification ready for S3Key: " + s3_key + " and JobId: " + JobId +
+                "\n Celebrities found on frames: " + str(len(CELEBRITIES_DETECTED))
+
+    )
+
 
 def get_s3_object_list(s3_bucket,path,marker='',s3_objects=[]):
     try:
