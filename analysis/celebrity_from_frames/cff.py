@@ -81,7 +81,7 @@ def lambda_handler(event, context):
 
     SNS_EMAIL_TOPIC = resource('sns').Topic(environ['SNS_EMAIL_TOPIC'])
     return SNS_EMAIL_TOPIC.publish(
-        Message=" Object & Scene Classification ready for S3Key: " + s3_key + " and JobId: " + JobId +
+        Message=" Celebrities from Frames ready for S3Key: " + s3_key + " and JobId: " + JobId +
                 "\n Celebrities found on frames: " + str(len(CELEBRITIES_DETECTED))
 
     )
