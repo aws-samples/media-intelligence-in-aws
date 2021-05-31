@@ -86,148 +86,7 @@ Resources:
                   - sns:*
                   - logs:*
                 Resource:
-                  - "*"
-  LambdaMediaConvertRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
-      Policies:
-        - PolicyName: LambdaMediaConvertRolePolicy
-          PolicyDocument:
-            Statement:
-              - Effect: Allow
-                Action:
-                  - mediaconvert:GetJob
-                  - mediaconvert:ListJobs
-                  - mediaconvert:DescribeEndpoints
-                  - mediaconvert:CreateJob
-                Resource:
-                  - "*"
-              - Effect: Allow
-                Action:
-                  - iam:PassRole
-                Resource:
-                  - !GetAtt MediaConvertS3Role.Arn
-              - Effect: Allow
-                Action:
-                  - s3:GetObject
-                  - s3:PutObject
-                Resource:
-                  - !Sub "arn:aws:s3:::${S3Bucket}/*"
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                Resource:
-                  - arn:aws:logs:*:*:*:*
-              - Effect: Allow
-                Action:
-                  - dynamodb:Get*
-                  - dynamodb:Delete*
-                  - dynamodb:Query
-                  - dynamodb:Scan
-                  - dynamodb:PutItem
-                  - dynamodb:UpdateItem
-                  - dynamodb:BatchWriteItem
-                Resource:
-                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
-                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
-              - Effect: Allow
-                Action:
-                  - sns:Publish
-                Resource:
-                  - !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"
-  LambdaRekognitionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
-      Policies:
-        - PolicyName: LambdaRekognitionPolicy
-          PolicyDocument:
-            Statement:
-              - Effect: Allow
-                Action:
-                  - rekognition:DetectLabels
-                  - rekognition:CompareFaces
-                  - rekognition:DetectFaces
-                  - rekognition:ListCollections
-                  - rekognition:ListFaces
-                  - rekognition:SearchFaces
-                  - rekognition:SearchFacesByImage
-                  - rekognition:StartTextDetection
-                  - rekognition:GetTextDetection
-                  - rekognition:DetectText
-                  - rekognition:GetCelebrityInfo
-                  - rekognition:RecognizeCelebrities
-                  - rekognition:DetectModerationLabels
-                  - rekognition:GetLabelDetection
-                  - rekognition:GetFaceDetection
-                  - rekognition:GetContentModeration
-                  - rekognition:GetCelebrityRecognition
-                  - rekognition:GetFaceSearch
-                  - rekognition:GetTextDetection
-                  - rekognition:GetSegmentDetection
-                  - rekognition:DetectCustomLabels
-                Resource:
-                  - "*"
-              - Effect: Allow
-                Action:
-                  - s3:GetObject
-                  - s3:PutObject
-                Resource:
-                  - !Sub "arn:aws:s3:::${S3Bucket}/*"
-                  - !Sub "arn:aws:s3:::${DestinationBucket}/*"
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                Resource:
-                  - arn:aws:logs:*:*:*:*
-              - Effect: Allow
-                Action:
-                  - dynamodb:Get*
-                  - dynamodb:Delete*
-                  - dynamodb:Query
-                  - dynamodb:Scan
-                  - dynamodb:PutItem
-                  - dynamodb:BatchWriteItem
-                Resource:
-                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
-                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
-              - Effect: Allow
-                Action:
-                  - lambda:InvokeFunction
-                Resource:
-                  - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*"
-              - Effect: Allow
-                Action:
-                  - sns:Publish
-                Resource:
-                  - !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"
+                  - "*"  
   APILambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -351,7 +210,6 @@ Resources:
     Properties:
       CodeUri: api/start_analysis/
       Handler: main.lambda_handler
-      Role: !GetAtt LambdaMediaConvertRole.Arn
       Environment:
         Variables:
           DDB_TABLE: !Ref DynamoDBTable
@@ -368,6 +226,48 @@ Resources:
             RestApiId: !Ref RestAPI
             Auth:
               ApiKeyRequired: true
+      Policies:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - Statement:
+          - Effect: Allow
+            Action:
+              - mediaconvert:GetJob
+              - mediaconvert:ListJobs
+              - mediaconvert:DescribeEndpoints
+              - mediaconvert:CreateJob
+            Resource:
+              - "*"
+          - Effect: Allow
+            Action:
+              - iam:PassRole
+            Resource:
+              - !GetAtt MediaConvertS3Role.Arn
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+            Resource:
+              - !Sub "arn:aws:s3:::${S3Bucket}/*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - arn:aws:logs:*:*:*:*
+          - Effect: Allow
+            Action:
+              - dynamodb:Query
+              - dynamodb:PutItem
+            Resource:
+              - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
+              - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
+          - Effect: Allow
+            Action:
+              - sns:Publish
+            Resource:
+              - !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"
   SearchAnalysisFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -390,14 +290,53 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: video_analysis/media_convert_job_checker/
-      Handler: media-convert-job-checker.lambda_handler
-      Role: !GetAtt LambdaMediaConvertRole.Arn
+      Handler: media-convert-job-checker.lambda_handler      
       Environment:
         Variables:
           SNS_TOPIC: !Ref VideoAnalysisTopic
           SNS_EMAIL_TOPIC: !Ref EmailTopic
           IN_S3_BUCKET: !Ref S3Bucket
           DDB_TABLE: !Ref DynamoDBTable
+      Policies:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - Statement:
+          - Effect: Allow
+            Action:
+              - mediaconvert:GetJob              
+              - mediaconvert:DescribeEndpoints              
+            Resource:
+              - "*"
+          - Effect: Allow
+            Action:
+              - iam:PassRole
+            Resource:
+              - !GetAtt MediaConvertS3Role.Arn
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+            Resource:
+              - !Sub "arn:aws:s3:::${S3Bucket}/*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - arn:aws:logs:*:*:*:*
+          - Effect: Allow
+            Action:
+              - dynamodb:Query
+              - dynamodb:PutItem              
+            Resource:
+              - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
+              - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
+          - Effect: Allow
+            Action:
+              - sns:Publish
+            Resource:
+              - !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"
   GetAnalysisFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -425,7 +364,6 @@ Resources:
     Properties:
       CodeUri: analysis/object_scene_classification/
       Handler: osc.lambda_handler
-      Role: !GetAtt LambdaRekognitionRole.Arn
       Timeout: 900
       Environment:
         Variables:
@@ -435,12 +373,52 @@ Resources:
           ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
           OSC_DICT: !Ref OSCDictionary
           SNS_EMAIL_TOPIC: !Ref EmailTopic
+      Policies:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - Statement:
+          - Effect: Allow
+            Action:
+              - rekognition:DetectLabels
+            Resource:
+              - "*"
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+            Resource:
+              - !Sub "arn:aws:s3:::${S3Bucket}/*"
+              - !Sub "arn:aws:s3:::${DestinationBucket}/*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - arn:aws:logs:*:*:*:*
+          - Effect: Allow
+            Action:
+              - dynamodb:Query
+              - dynamodb:PutItem
+              - dynamodb:BatchWriteItem
+            Resource:
+              - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
+              - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
+          - Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+            Resource:
+              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*"
+          - Effect: Allow
+            Action:
+              - sns:Publish
+            Resource:
+              - !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"
   BrandFromTextAnalysis:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: analysis/brand_from_text/
       Handler: bft.lambda_handler
-      Role: !GetAtt LambdaRekognitionRole.Arn
       Environment:
         Variables:
           DDB_TABLE: !Ref DynamoDBTable
@@ -449,12 +427,53 @@ Resources:
           SIM_THRESHOLD: 0.7
           ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
           SNS_EMAIL_TOPIC: !Ref EmailTopic
+      Policies:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - Statement:
+          - Effect: Allow
+            Action:
+              - rekognition:StartTextDetection
+              - rekognition:GetTextDetection
+              - rekognition:DetectText
+            Resource:
+              - "*"
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+            Resource:
+              - !Sub "arn:aws:s3:::${S3Bucket}/*"
+              - !Sub "arn:aws:s3:::${DestinationBucket}/*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - arn:aws:logs:*:*:*:*
+          - Effect: Allow
+            Action:
+              - dynamodb:PutItem
+              - dynamodb:BatchWriteItem
+            Resource:
+              - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
+              - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
+          - Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+            Resource:
+              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*"
+          - Effect: Allow
+            Action:
+              - sns:Publish
+            Resource:
+              - !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"
   BrandFromLogoAnalysis:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: analysis/brand_from_logo/
       Handler: bfl.lambda_handler
-      Role: !GetAtt LambdaRekognitionRole.Arn
       Environment:
         Variables:
           DDB_TABLE: !Ref DynamoDBTable
@@ -464,12 +483,51 @@ Resources:
           ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
           SNS_EMAIL_TOPIC: !Ref EmailTopic
           MODEL_ARN: arn:aws:rekognition:us-east-1:728516303426:project/globo-brands-cl/version/globo-brands-cl.2021-04-20T09.07.16/1618920437011
+      Policies:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - Statement:
+          - Effect: Allow
+            Action:
+              - rekognition:DetectCustomLabels
+            Resource:
+              - "*"
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+            Resource:
+              - !Sub "arn:aws:s3:::${S3Bucket}/*"
+              - !Sub "arn:aws:s3:::${DestinationBucket}/*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - arn:aws:logs:*:*:*:*
+          - Effect: Allow
+            Action:
+              - dynamodb:PutItem
+              - dynamodb:BatchWriteItem
+            Resource:
+              - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
+              - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
+          - Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+            Resource:
+              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*"
+          - Effect: Allow
+            Action:
+              - sns:Publish
+            Resource:
+              - !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"
   CelebritiesFromFramesAnalysis:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: analysis/celebrity_from_frames/
       Handler: cff.lambda_handler
-      Role: !GetAtt LambdaRekognitionRole.Arn
       Environment:
         Variables:
           DDB_TABLE: !Ref ResultsTable
@@ -478,6 +536,52 @@ Resources:
           CELEBRITY_COLLECTION_ID: !Ref CelebrityCollectionID
           ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
           SNS_EMAIL_TOPIC: !Ref EmailTopic
+      Policies:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - Statement:
+          - Effect: Allow
+            Action:
+              - rekognition:DetectFaces
+              - rekognition:IndexFaces
+              - rekognition:SearchFaces
+              - rekognition:StartFaceSearch
+              - rekognition:SearchFacesByImage
+              - rekognition:GetFaceSearch
+            Resource:
+              - "*"
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+            Resource:
+              - !Sub "arn:aws:s3:::${S3Bucket}/*"
+              - !Sub "arn:aws:s3:::${DestinationBucket}/*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - arn:aws:logs:*:*:*:*
+          - Effect: Allow
+            Action:
+              - dynamodb:Query
+              - dynamodb:PutItem
+              - dynamodb:BatchWriteItem
+            Resource:
+              - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
+              - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
+          - Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+            Resource:
+              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*"
+          - Effect: Allow
+            Action:
+              - sns:Publish
+            Resource:
+              - !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"
   ######################
   # Lambda Permissions #
   ######################
