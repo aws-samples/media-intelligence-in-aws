@@ -171,4 +171,7 @@ def lambda_handler(event, context):
             })
         )
         print(ans)
-    
+    SNS_EMAIL_TOPIC = resource('sns').Topic(environ['SNS_EMAIL_TOPIC'])
+    return SNS_EMAIL_TOPIC.publish(
+        Message=" Brand from Logos ready for S3Key: " + message['S3Key'] + " and JobId: " + message['JobId']
+    )
