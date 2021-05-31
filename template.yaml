@@ -509,6 +509,7 @@ Resources:
           - Effect: Allow
             Action:
               - dynamodb:PutItem
+              - dynamodb:Query
               - dynamodb:BatchWriteItem
             Resource:
               - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
