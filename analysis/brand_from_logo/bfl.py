@@ -14,7 +14,6 @@ client_config = config.Config(
 REKOGNITION = client('rekognition', config=client_config)
 SNS = client('sns')
 S3 = client('s3')
-S3_BUCKET = resource('s3').Bucket(environ['DEST_S3_BUCKET'])
 TABLE = resource('dynamodb').Table(environ['DDB_TABLE'])
 BRANDS = {}
 LAMBDA = client('lambda')

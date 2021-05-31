@@ -3,9 +3,9 @@ version = 0.1
 [default.deploy]
 [default.deploy.parameters]
 stack_name = "globo"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-qwmxecpzgogx"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-8xth23jfv4sj"
 s3_prefix = "globo"
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Email=\"arbahena@amazon.com\" S3Bucket=\"globo-data-copy\" DestinationBucket=\"globo-dev\" ESDomainName=\"globo-dpp-es\" CognitoDomainName=\"globo-dpp-es-kibana\" DynamoDBTable=\"globo-jobs\" CelebrityCollectionID=\"bra-celebs\" StageName=\"Prod\""
+parameter_overrides = "Email=\"pppimen@amazon.com\" S3Bucket=\"pedroblackbelt\" DestinationBucket=\"pedroblackbelt\" ESDomainName=\"globo-dpp-testing\" CognitoDomainName=\"globo-dpp-testing-domain\" DynamoDBTable=\"globo-jobs\" CelebrityCollectionID=\"bra-celebs\" StageName=\"Prod\""
 confirm_changeset = true

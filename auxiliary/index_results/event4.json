@@ -1,0 +1,406 @@
+{
+  "results": {
+    "7000": [
+      {
+        "scene": "City",
+        "accuracy": 99.89057922363281
+      },
+      {
+        "scene": "Urban",
+        "accuracy": 99.89057922363281
+      }
+    ],
+    "8000": [
+      {
+        "scene": "Urban",
+        "accuracy": 97.36532592773438
+      },
+      {
+        "scene": "City",
+        "accuracy": 97.27262115478516
+      }
+    ],
+    "6000": [
+      {
+        "scene": "Urban",
+        "accuracy": 99.21418762207031
+      },
+      {
+        "scene": "City",
+        "accuracy": 99.21418762207031
+      }
+    ],
+    "9000": [
+      {
+        "scene": "Hug",
+        "accuracy": 95.07763671875
+      }
+    ],
+    "15000": [
+      {
+        "scene": "Interior Design",
+        "accuracy": 99.0659408569336
+      },
+      {
+        "scene": "Indoors",
+        "accuracy": 99.0659408569336
+      },
+      {
+        "scene": "Room",
+        "accuracy": 81.91300201416016
+      }
+    ],
+    "13000": [
+      {
+        "scene": "Reading",
+        "accuracy": 86.88700103759766
+      }
+    ],
+    "14000": [
+      {
+        "scene": "Reading",
+        "accuracy": 98.4513168334961
+      }
+    ],
+    "17000": [
+      {
+        "scene": "Interior Design",
+        "accuracy": 95.30685424804688
+      },
+      {
+        "scene": "Indoors",
+        "accuracy": 95.30685424804688
+      }
+    ],
+    "18000": [
+      {
+        "scene": "Interior Design",
+        "accuracy": 96.25399780273438
+      },
+      {
+        "scene": "Indoors",
+        "accuracy": 96.25399780273438
+      }
+    ],
+    "19000": [
+      {
+        "scene": "Leisure Activities",
+        "accuracy": 93.29230499267578
+      }
+    ],
+    "21000": [
+      {
+        "scene": "Leisure Activities",
+        "accuracy": 80.90406036376953
+      }
+    ],
+    "20000": [
+      {
+        "scene": "Leisure Activities",
+        "accuracy": 97.52588653564453
+      }
+    ],
+    "22000": [
+      {
+        "scene": "Leisure Activities",
+        "accuracy": 95.05009460449219
+      }
+    ],
+    "28000": [
+      {
+        "scene": "Interior Design",
+        "accuracy": 99.21587371826172
+      },
+      {
+        "scene": "Indoors",
+        "accuracy": 99.21587371826172
+      }
+    ],
+    "29000": [
+      {
+        "scene": "Interior Design",
+        "accuracy": 85.22207641601562
+      },
+      {
+        "scene": "Indoors",
+        "accuracy": 85.22207641601562
+      }
+    ],
+    "27000": [
+      {
+        "scene": "Interior Design",
+        "accuracy": 97.73341369628906
+      },
+      {
+        "scene": "Indoors",
+        "accuracy": 97.73341369628906
+      }
+    ],
+    "32000": [
+      {
+        "scene": "Working Out",
+        "accuracy": 84.96086120605469
+      },
+      {
+        "scene": "Sport",
+        "accuracy": 84.96086120605469
+      },
+      {
+        "scene": "Exercise",
+        "accuracy": 84.96086120605469
+      },
+      {
+        "scene": "Sports",
+        "accuracy": 84.96086120605469
+      },
+      {
+        "scene": "Fitness",
+        "accuracy": 80.3954849243164
+      }
+    ],
+    "35000": [
+      {
+        "scene": "Interior Design",
+        "accuracy": 95.09181213378906
+      },
+      {
+        "scene": "Indoors",
+        "accuracy": 95.09181213378906
+      }
+    ],
+    "31000": [
+      {
+        "scene": "Interior Design",
+        "accuracy": 96.84088897705078
+      },
+      {
+        "scene": "Indoors",
+        "accuracy": 96.84088897705078
+      }
+    ],
+    "34000": [
+      {
+        "scene": "Interior Design",
+        "accuracy": 88.37682342529297
+      },
+      {
+        "scene": "Indoors",
+        "accuracy": 88.37682342529297
+      }
+    ],
+    "40000": [
+      {
+        "scene": "Living Room",
+        "accuracy": 82.4504623413086
+      },
+      {
+        "scene": "Indoors",
+        "accuracy": 82.4504623413086
+      },
+      {
+        "scene": "Room",
+        "accuracy": 82.4504623413086
+      }
+    ],
+    "41000": [
+      {
+        "scene": "Interior Design",
+        "accuracy": 96.25399780273438
+      },
+      {
+        "scene": "Indoors",
+        "accuracy": 96.25399780273438
+      }
+    ],
+    "36000": [
+      {
+        "scene": "Interior Design",
+        "accuracy": 84.92327117919922
+      },
+      {
+        "scene": "Indoors",
+        "accuracy": 84.92327117919922
+      }
+    ],
+    "46000": [
+      {
+        "scene": "Sleeping",
+        "accuracy": 99.16427612304688
+      }
+    ],
+    "47000": [
+      {
+        "scene": "Sleeping",
+        "accuracy": 96.29508972167969
+      }
+    ],
+    "52000": [
+      {
+        "scene": "Leisure Activities",
+        "accuracy": 98.20465087890625
+      }
+    ],
+    "66000": [
+      {
+        "scene": "Interior Design",
+        "accuracy": 95.73443603515625
+      },
+      {
+        "scene": "Indoors",
+        "accuracy": 95.73443603515625
+      }
+    ],
+    "67000": [
+      {
+        "scene": "Interior Design",
+        "accuracy": 96.96446990966797
+      },
+      {
+        "scene": "Indoors",
+        "accuracy": 96.96446990966797
+      }
+    ],
+    "62000": [
+      {
+        "scene": "Interior Design",
+        "accuracy": 96.5983657836914
+      }
+    ],
+    "75000": [
+      {
+        "scene": "Leisure Activities",
+        "accuracy": 97.58609771728516
+      }
+    ],
+    "76000": [
+      {
+        "scene": "Leisure Activities",
+        "accuracy": 96.66683959960938
+      }
+    ],
+    "74000": [
+      {
+        "scene": "Leisure Activities",
+        "accuracy": 97.76542663574219
+      }
+    ],
+    "73000": [
+      {
+        "scene": "Leisure Activities",
+        "accuracy": 97.44746398925781
+      }
+    ],
+    "80000": [
+      {
+        "scene": "Leisure Activities",
+        "accuracy": 97.65264129638672
+      }
+    ],
+    "81000": [
+      {
+        "scene": "Leisure Activities",
+        "accuracy": 97.63683319091797
+      }
+    ],
+    "77000": [
+      {
+        "scene": "Leisure Activities",
+        "accuracy": 96.95653533935547
+      }
+    ],
+    "82000": [
+      {
+        "scene": "Leisure Activities",
+        "accuracy": 97.21868133544922
+      }
+    ],
+    "83000": [
+      {
+        "scene": "Sleeping",
+        "accuracy": 83.58251953125
+      }
+    ],
+    "79000": [
+      {
+        "scene": "Leisure Activities",
+        "accuracy": 97.30108642578125
+      }
+    ],
+    "84000": [
+      {
+        "scene": "Interior Design",
+        "accuracy": 91.76603698730469
+      },
+      {
+        "scene": "Indoors",
+        "accuracy": 91.76603698730469
+      }
+    ],
+    "78000": [
+      {
+        "scene": "Leisure Activities",
+        "accuracy": 96.33850860595703
+      }
+    ],
+    "85000": [
+      {
+        "scene": "Interior Design",
+        "accuracy": 98.94441986083984
+      },
+      {
+        "scene": "Indoors",
+        "accuracy": 98.94441986083984
+      },
+      {
+        "scene": "Hug",
+        "accuracy": 96.86351013183594
+      }
+    ],
+    "87000": [
+      {
+        "scene": "Hug",
+        "accuracy": 97.62193298339844
+      }
+    ],
+    "90000": [
+      {
+        "scene": "Dating",
+        "accuracy": 82.81626892089844
+      }
+    ],
+    "94000": [
+      {
+        "scene": "Sleeping",
+        "accuracy": 96.77190399169922
+      }
+    ],
+    "96000": [
+      {
+        "scene": "Sleeping",
+        "accuracy": 87.9656982421875
+      }
+    ],
+    "97000": [
+      {
+        "scene": "Sleeping",
+        "accuracy": 98.38683319091797
+      }
+    ],
+    "95000": [
+      {
+        "scene": "Sleeping",
+        "accuracy": 94.9424819946289
+      }
+    ],
+    "98000": [
+      {
+        "scene": "Sleeping",
+        "accuracy": 94.89729309082031
+      }
+    ]
+  },
+  "type": "scenes",
+  "S3_Key": "sample/bradesco.mp4",
+  "SampleRate": 1,
+  "JobId": "1621965039168-rx0c1h"
+}

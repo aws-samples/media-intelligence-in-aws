@@ -1,28 +1,22 @@
 {
-  "must": { 
-    "brands": [
-      {
-        "brand": "Havaianas", "accuracy": 0.2
-      }
-    ],
-    "celebrities": [
-      {
-        "celebrity": "William Bonner"
-      }
-    ]
+  "must": {
+      "brands": [
+          {
+              "brand": "Havaianas",
+              "accuracy": 0.2
+          }
+      ],
+      "celebrities": [
+          {
+              "celebrity": "ReginaCase"
+          }
+      ]
   },
   "avoid": {
-    "scenes": [
-      {
-        "scene": "beach"
-      }
-    ],
-    "celebrities" : [
-      {
-        "celebrity" : "Luciano Hulk"
-      }
-    ]
-  },
-  "S3Key": "havaianas.mp4",
-  "SampleRate": 1
+      "scenes": [
+          {
+              "scene": "beach"
+          }
+      ]
+  }
 }

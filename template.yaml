@@ -26,16 +26,19 @@ Parameters:
     Default: 'globo-dpp-es-kibana'
   DynamoDBTable:
     Type: String
-    Default: "globo-jobs"
+    Default: 'globo-jobs'
   CelebrityCollectionID:
     Type: String
-    Default: "bra-celebs"
+    Default: 'bra-celebs'
   StageName:
     Type: String
-    Default: "Prod"
+    Default: 'Prod'
   OSCDictionary:
     Type: String
-    Default: "osc_files/dictionary.json"
+    Default: 'osc_files/dictionary.json'
+  ModelVersionArn:
+    Type: String
+    Default: 'arn:aws:rekognition:us-east-1:728516303426:project/globo-brands-cl/version/globo-brands-cl.2021-04-20T09.07.16/1618920437011'
 
 Globals:
   Function:
@@ -43,13 +46,10 @@ Globals:
     Handler: app.lambda_handler
     Timeout: 300
     MemorySize: 1024
-    Layers:
-      - !Ref Shared
     Environment:
       Variables:
         STAGE: !Ref StageName
         MIN_ACCURACY: 80
-
 Resources:
   #############
   # IAM Roles #
@@ -268,51 +268,6 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
                   - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
-  ElasticSearchLambdaRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
-      Policies:
-        - PolicyName: LambdaElastiSearchRolePolicy
-          PolicyDocument:
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:GetObject
-                Resource:
-                  - !Sub "arn:aws:s3:::${S3Bucket}/*"
-                  - !Sub "arn:aws:s3:::${DestinationBucket}/*"
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                Resource:
-                  - arn:aws:logs:*:*:*:*
-              - Effect: Allow
-                Action:
-                  - dynamodb:Get*
-                  - dynamodb:Query
-                  - dynamodb:Scan
-                Resource:
-                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
-                  - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
-              - Effect: Allow
-                Action:
-                  - es:ESHttpPost
-                Resource:
-                  - "*"
 
   ####################
   #        API       #
@@ -381,10 +336,11 @@ Resources:
             RestApiId: !Ref RestAPI
             Auth:
              ApiKeyRequired: true
+
   MediaConvertJobChecker:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: video_analysis/media_convert_job_checker/
+      CodeUri: auxiliary/media_convert_job_checker/
       Handler: media-convert-job-checker.lambda_handler
       Role: !GetAtt LambdaMediaConvertRole.Arn
       Environment:
@@ -442,6 +398,29 @@ Resources:
           DEST_S3_BUCKET: !Ref DestinationBucket
           SIM_THRESHOLD: 0.7
           ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action: 
+                - sns:Publish
+              Resource: !Ref EmailTopic
+            - Effect: Allow
+              Action: 
+                - rekognition:GetTextDetection
+                - rekognition:StartTextDetection
+              Resource: "*"
+            - Effect: Allow
+              Action: 
+                - dynamodb:BatchWriteItem
+                - dynamodb:PutItem
+                - dynamodb:BatchGetItem
+                - dynamodb:GetItem
+              Resource: !GetAtt DynamoDBTable.Arn
+            - Effect: Allow
+              Action: 
+                - lambda:InvokeFunction
+              Resource: !GetAtt ESLambda.Arn
   BrandFromLogoAnalysis:
     Type: AWS::Serverless::Function
     Properties:
@@ -455,7 +434,33 @@ Resources:
           DEST_S3_BUCKET: !Ref DestinationBucket
           CONFIDENCE_THRESHOLD: 50.0
           ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
-          MODEL_ARN: arn:aws:rekognition:us-east-1:728516303426:project/globo-brands-cl/version/globo-brands-cl.2021-04-20T09.07.16/1618920437011
+          MODEL_ARN: !Ref ModelVersionArn
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action: 
+                - sns:Publish
+              Resource: !Ref EmailTopic
+            - Effect: Allow
+              Action: 
+                - rekognition:DetectCustomLabels
+              Resource: "*"
+            - Effect: Allow
+              Action: 
+                - dynamodb:BatchWriteItem
+                - dynamodb:PutItem
+                - dynamodb:BatchGetItem
+                - dynamodb:GetItem
+              Resource: !GetAtt DynamoDBTable.Arn
+            - Effect: Allow
+              Action: 
+                - lambda:InvokeFunction
+              Resource: !GetAtt ESLambda.Arn
+            - Effect: Allow
+              Action: 
+                - s3:ListBucket
+              Resource: "*"
   CelebritiesFromFramesAnalysis:
     Type: AWS::Serverless::Function
     Properties:
@@ -523,25 +528,13 @@ Resources:
   ESLambda:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: lambda
+      CodeUri: auxiliary/index_results
       Handler: esindex.lambda_handler
       Role: !GetAtt NestedStack.Outputs.LambdaRole
       Environment:
         Variables:
           AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
           DOMAIN_ENDPOINT: !GetAtt NestedStack.Outputs.ESDomainEndpoint
-  #####################
-  #Lambda Custom Layer#
-  #####################
-  Shared:
-    Type: AWS::Serverless::LayerVersion
-    Properties:
-      LayerName: "AnalysisSaver"
-      Description: "Library to save results from analysis to DynamoDB and ElastiSearch"
-      ContentUri: shared/
-      CompatibleRuntimes:
-        - python3.7
-      RetentionPolicy: Delete
   ####################
   #    SNS Topics    #
   ####################
@@ -663,6 +656,11 @@ Resources:
               - analysis
             ProjectionType: INCLUDE
       BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+
       Tags:
         - Key: cost
           Value: aws-ee
