@@ -9,6 +9,7 @@ from hashlib import md5
 
 INDEX_NAME = 'analysis-results'
 
+
 def connect_es(esEndPoint):
     __credentials = boto3.Session().get_credentials()
     __awsauth = AWS4Auth(
@@ -18,19 +19,24 @@ def connect_es(esEndPoint):
         'es',
         session_token=__credentials.token
     )
-    print ('Connecting to the ES Endpoint {0}'.format(esEndPoint))
+    print('Connecting to the ES Endpoint {0}'.format(esEndPoint))
     try:
         esClient = Elasticsearch(
-            hosts=[{'host': esEndPoint, 'port': 443}],
-            http_auth = __awsauth,
+            hosts=[{
+                'host': esEndPoint,
+                'port': 443
+            }],
+            http_auth=__awsauth,
             use_ssl=True,
             verify_certs=True,
-            connection_class=RequestsHttpConnection)
+            connection_class=RequestsHttpConnection
+        )
         return esClient
     except Exception as E:
         print("Unable to connect to {0}".format(esEndPoint))
         print(E)
         exit(3)
+
 
 def create_index(esClient, indexDoc):
     try:
@@ -39,43 +45,39 @@ def create_index(esClient, indexDoc):
             esClient.indices.create(INDEX_NAME, body=indexDoc)
         return 1
     except Exception as E:
-            print("Unable to Create Index {0}".format(INDEX_NAME))
-            print(E)
-            exit(4)
+        print("Unable to Create Index {0}".format(INDEX_NAME))
+        print(E)
+        exit(4)
+
 
 def index_video_record(esClient, key, document):
-    routing = int(md5(bytes(key, 'utf-8')).hexdigest(), 16)%5
+    routing = int(md5(bytes(key, 'utf-8')).hexdigest(), 16) % 5
     exists = esClient.exists(index=INDEX_NAME, id=key, routing=routing)
     if not exists:
-        try: 
+        try:
             esClient.create(
-                index=INDEX_NAME,
-                id=key,
-                body=document,
-                routing=routing
+                index=INDEX_NAME, id=key, body=document, routing=routing
             )
         except Exception as E:
             print("Video not indexed")
-            print("Error: ",E)
+            print("Error: ", E)
             exit(5)
     return routing
+
 
 def index_frame_record(esClient, key, document, routing):
     print(document)
     if not esClient.exists(index=INDEX_NAME, id=key, routing=routing):
-        try: 
+        try:
             esClient.create(
-                index=INDEX_NAME,
-                id=key,
-                body=document,
-                routing=routing
+                index=INDEX_NAME, id=key, body=document, routing=routing
             )
         except Exception as E:
             print("frame not indexed")
-            print("Error: ",E)
+            print("Error: ", E)
             exit(5)
     else:
-        try: 
+        try:
             esClient.update(
                 index=INDEX_NAME,
                 id=key,
@@ -85,8 +87,9 @@ def index_frame_record(esClient, key, document, routing):
             )
         except Exception as E:
             print("frame not indexed")
-            print("Error: ",E)
+            print("Error: ", E)
             exit(5)
+
 
 def gen_video_record(anaysisResult):
     return {
@@ -96,12 +99,13 @@ def gen_video_record(anaysisResult):
         "doc_type": "video"
     }
 
+
 def gen_documents(analysisResult, parentId):
     for timestamp in analysisResult['results'].items():
         yield {
-            'S3_Key': analysisResult['S3_Key'].replace('/','-'),
+            'S3_Key': analysisResult['S3_Key'].replace('/', '-'),
             'Timestamp': int(timestamp[0]),
-            analysisResult['type']:timestamp[1],
+            analysisResult['type']: timestamp[1],
             'doc_type': {
                 'name': 'frame',
                 'parent': parentId
@@ -121,21 +125,26 @@ Indexing steps:
 """
 
 ES_CLIENT = connect_es(environ['DOMAIN_ENDPOINT'])
+
+
 def lambda_handler(event, context):
     print("Received event: " + dumps(event, indent=2))
     responses = []
     if create_index(ES_CLIENT, IndexDefinition):
         try:
             video_key = '{}-{}'.format(event['S3_Key'], event['SampleRate'])
-            routing = index_video_record(ES_CLIENT, video_key, gen_video_record(event))
+            routing = index_video_record(
+                ES_CLIENT, video_key, gen_video_record(event)
+            )
             for document in gen_documents(event, video_key):
                 print(document)
-                responses.append(index_frame_record(
-                    ES_CLIENT,
-                    '{}-{}'.format(document['S3_Key'],document['Timestamp']),
-                    document,
-                    routing
-                ))
+                responses.append(
+                    index_frame_record(
+                        ES_CLIENT, '{}-{}'.format(
+                            document['S3_Key'], document['Timestamp']
+                        ), document, routing
+                    )
+                )
             return responses
         except Exception as e:
             print('Failed to Index: {}'.format(e))

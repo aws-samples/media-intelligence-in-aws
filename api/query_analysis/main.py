@@ -1,5 +1,5 @@
 from os import environ
-from json import dumps,loads
+from json import dumps, loads
 from boto3 import resource
 from boto3.dynamodb.conditions import Key
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -8,19 +8,17 @@ TABLE = resource('dynamodb').Table(environ['DDB_TABLE'])
 ANALYSIS_LIST = environ['ANALYSIS_LIST']
 
 RESPONSE_PATTERN = {
-    'statusCode':200,
-    'isBase64Encoded':False,
+    'statusCode': 200,
+    'isBase64Encoded': False,
     'headers': {
-    'Access-Control-Allow-Origin': '*'
+        'Access-Control-Allow-Origin': '*'
     }
 }
 
+
 def lambda_handler(event, context):
-    response = {
-        'msg':'',
-        'data':{}
-    }
-    print('Processing event:\n'+dumps(event))
+    response = {'msg': '', 'data': {}}
+    print('Processing event:\n' + dumps(event))
     print(ANALYSIS_LIST)
     print('---')
     event['body'] = loads(event['body'])
@@ -37,17 +35,19 @@ def lambda_handler(event, context):
 
     if record is False:
         RESPONSE_PATTERN['statusCode'] = 404
-        response['msg'] = 'No video analysis found with specified query attributes, please verify you have the correct S3Key and SampleRate/JobId'
+        response[
+            'msg'
+        ] = 'No video analysis found with specified query attributes, please verify you have the correct S3Key and SampleRate/JobId'
         RESPONSE_PATTERN['body'] = dumps(response)
         return (RESPONSE_PATTERN)
 
-    analysis,query_results = get_analysis_dynamo_results(record,query_spec)
+    analysis, query_results = get_analysis_dynamo_results(record, query_spec)
     record['AnalysisPerformed'] = analysis['analysis']
     #print(query_results)
 
     msg = ""
-    for index,value in record.items():
-        msg += " "+str(index)+": "+str(value)
+    for index, value in record.items():
+        msg += " " + str(index) + ": " + str(value)
 
     response['msg'] = "Query response for item " + msg
     response['data'] = query_results
@@ -59,16 +59,16 @@ def lambda_handler(event, context):
 
     return (RESPONSE_PATTERN)
 
-def get_analysis_dynamo_results(item,query):
 
-    print("Getting results for \n",item)
+def get_analysis_dynamo_results(item, query):
+
+    print("Getting results for \n", item)
     all_results = {}
 
     analysis_list = TABLE.query(
-            KeyConditionExpression=
-            Key('S3Key').eq(item['S3Key']) & Key('AttrType').eq('frm/' + str(item['SampleRate']))
+        KeyConditionExpression=Key('S3Key').eq(item['S3Key']) &
+        Key('AttrType').eq('frm/' + str(item['SampleRate']))
     )['Items'][0]
-
 
     if query['Analysis'] == 'all':
         parsed_list = ANALYSIS_LIST
@@ -79,20 +79,25 @@ def get_analysis_dynamo_results(item,query):
         with ThreadPoolExecutor(max_workers=len(ANALYSIS_LIST)) as pool:
             futures = [
                 pool.submit(
-                    get_results_by_analysis, item['S3Key'], "ana/" + analysis + "/" + item['SampleRate'] + "/", analysis
+                    get_results_by_analysis, item['S3Key'],
+                    "ana/" + analysis + "/" + item['SampleRate'] + "/", analysis
                 ) for analysis in parsed_list
             ]
             for r in as_completed(futures):
-                analysis,data = r.result()
+                analysis, data = r.result()
                 if data is not False:
                     all_results[analysis] = data
     else:
-        analysis_base_name = "ana/" + query['Analysis'] + "/" + item['SampleRate'] + "/"
-        analysis,results = get_results_by_analysis(item['S3Key'],analysis_base_name,query['Analysis'])
+        analysis_base_name = "ana/" + query['Analysis'] + "/" + item[
+            'SampleRate'] + "/"
+        analysis, results = get_results_by_analysis(
+            item['S3Key'], analysis_base_name, query['Analysis']
+        )
         if results is not False:
             all_results[analysis] = results
 
-    return analysis_list,all_results
+    return analysis_list, all_results
+
 
 def validate_request(body):
     if 'S3Key' not in body:
@@ -102,12 +107,12 @@ def validate_request(body):
     by_job_id = True if 'JobId' in body else False
     by_sample_rate = True if 'SampleRate' in body else False
     if by_job_id is False and by_sample_rate is False:
-        print("Missing required query parameters either JobId or SampleRate on request")
+        print(
+            "Missing required query parameters either JobId or SampleRate on request"
+        )
         return False
 
-    query_structure = {
-        'S3Key':body['S3Key']
-    }
+    query_structure = {'S3Key': body['S3Key']}
     if by_job_id:
         query_structure['query_by'] = 'JobId'
         query_structure['JobId'] = body['JobId']
@@ -117,7 +122,10 @@ def validate_request(body):
 
     if 'Analysis' in body:
         if body['Analysis'] != 'all' and body['Analysis'] not in ANALYSIS_LIST:
-            print("Analysis must be either 'all' or one from the list ",ANALYSIS_LIST)
+            print(
+                "Analysis must be either 'all' or one from the list ",
+                ANALYSIS_LIST
+            )
             return False
         else:
             query_structure['Analysis'] = body['Analysis']
@@ -126,17 +134,18 @@ def validate_request(body):
 
     return query_structure
 
+
 def query_item(query):
     if query['query_by'] == 'JobId':
         dynamo_record = TABLE.query(
             IndexName='JobIdIndex',
-            KeyConditionExpression=
-            Key('S3Key').eq(query['S3Key']) & Key('JobId').eq(query['JobId'])
+            KeyConditionExpression=Key('S3Key').eq(query['S3Key']) &
+            Key('JobId').eq(query['JobId'])
         )['Items']
     elif query['query_by'] == 'SampleRate':
         dynamo_record = TABLE.query(
-            KeyConditionExpression=
-            Key('S3Key').eq(query['S3Key']) & Key('AttrType').eq('frm/' + str(query['SampleRate']))
+            KeyConditionExpression=Key('S3Key').eq(query['S3Key']) &
+            Key('AttrType').eq('frm/' + str(query['SampleRate']))
         )['Items']
     else:
         print("Unsupported query by")
@@ -150,14 +159,15 @@ def query_item(query):
 
 def get_item_info(dynamo_record):
     item = {
-        'S3Key':dynamo_record['S3Key'],
-        'JobId':dynamo_record['JobId'],
+        'S3Key': dynamo_record['S3Key'],
+        'JobId': dynamo_record['JobId'],
         'SampleRate': get_samplerate_from_attrtype(dynamo_record['AttrType'])
     }
     return item
 
+
 def get_samplerate_from_attrtype(attr_type):
-    segments =  attr_type.split('/')
+    segments = attr_type.split('/')
     if len(segments) <= 3:
         return segments[-1]
     elif len(segments) == 4:
@@ -165,15 +175,16 @@ def get_samplerate_from_attrtype(attr_type):
     else:
         return False
 
-def get_results_by_analysis(s3_key,analysis_base_name,analysis):
-    print("querying results for "+s3_key+" & "+analysis_base_name)
+
+def get_results_by_analysis(s3_key, analysis_base_name, analysis):
+    print("querying results for " + s3_key + " & " + analysis_base_name)
     results = TABLE.query(
-        KeyConditionExpression=
-        Key('S3Key').eq(s3_key) & Key('AttrType').begins_with(analysis_base_name)
+        KeyConditionExpression=Key('S3Key').eq(s3_key) &
+        Key('AttrType').begins_with(analysis_base_name)
     )['Items']
 
     if results == []:
-        return analysis,False
+        return analysis, False
 
     all_results = []
     i = 0
@@ -184,14 +195,16 @@ def get_results_by_analysis(s3_key,analysis_base_name,analysis):
 
         if i < 9:
             results = TABLE.query(
-                KeyConditionExpression=
-                Key('S3Key').eq(s3_key) & Key('AttrType').between(analysis_base_name + str(i),
-                                                                  analysis_base_name + str(i + 1))
+                KeyConditionExpression=Key('S3Key').eq(s3_key) &
+                Key('AttrType').between(
+                    analysis_base_name + str(i), analysis_base_name +
+                    str(i + 1)
+                )
             )['Items']
         else:
             results = TABLE.query(
-                KeyConditionExpression=
-                Key('S3Key').eq(s3_key) & Key('AttrType').begins_with(analysis_base_name + str(i))
+                KeyConditionExpression=Key('S3Key').eq(s3_key) &
+                Key('AttrType').begins_with(analysis_base_name + str(i))
             )['Items']
         i += 1
-    return analysis,all_results
+    return analysis, all_results
