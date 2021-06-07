@@ -145,7 +145,7 @@ Resources:
       StageName: !Ref StageName
       AccessLogSetting:
         DestinationArn: !GetAtt RestAPIAccessLogGroup.Arn
-        Format: "$context.authorize.status $context.integration.integrationStatus $context.integrationErrorMessage"
+        Format: "$context.requestId $context.authorize.status $context.integration.integrationStatus $context.integrationErrorMessage"
       MethodSettings:
         - ResourcePath: "/*"
           HttpMethod: "*"
