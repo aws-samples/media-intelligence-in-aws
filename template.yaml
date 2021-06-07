@@ -82,11 +82,13 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - cloudwatch:*
-                  - sns:*
+                  - cloudwatch:PutMetricData
+                  - cloudwatch:PutMetricStream
                   - logs:*
                 Resource:
-                  - "*"  
+                  - !Sub "arn:aws:logs::${AWS::AccountId}:*:*:*"
+                  - !Sub "arn:aws:cloudwatch::${AWS::AccountId}:*/*"
+                  - !Sub "arn:aws:cloudwatch::${AWS::AccountId}:*"
   APILambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -118,7 +120,7 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource:
-                  - arn:aws:logs:*:*:*:*
+                  - !Sub "arn:aws:logs::${AWS::AccountId}:*:*:*"
               - Effect: Allow
                 Action:
                   - lambda:InvokeFunction
@@ -141,6 +143,14 @@ Resources:
     Properties:
       Name: RestAPI
       StageName: !Ref StageName
+      AccessLogSetting:
+        DestinationArn: !GetAtt RestAPIAccessLogGroup.Arn
+        Format: "$context.authorize.status $context.integration.integrationStatus $context.integrationErrorMessage"
+      MethodSettings:
+        - ResourcePath: "/*"
+          HttpMethod: "*"
+          LoggingLevel: INFO
+          MetricsEnabled: True
       Auth:
         ApiKeyRequired: true
         UsagePlan:
@@ -210,7 +220,7 @@ Resources:
               - logs:CreateLogStream
               - logs:PutLogEvents
             Resource:
-              - arn:aws:logs:*:*:*:*
+              - !Sub "arn:aws:logs::${AWS::AccountId}:*:*:*"
           - Effect: Allow
             Action:
               - dynamodb:Query
@@ -222,7 +232,7 @@ Resources:
             Action:
               - sns:Publish
             Resource:
-              - !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"
+              - !Ref VideoAnalysisTopic
   SearchAnalysisFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -246,7 +256,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: auxiliary/media_convert_job_checker/
-      Handler: media-convert-job-checker.lambda_handler      
+      Handler: media-convert-job-checker.lambda_handler
       Environment:
         Variables:
           SNS_TOPIC: !Ref VideoAnalysisTopic
@@ -259,8 +269,8 @@ Resources:
         - Statement:
           - Effect: Allow
             Action:
-              - mediaconvert:GetJob              
-              - mediaconvert:DescribeEndpoints              
+              - mediaconvert:GetJob
+              - mediaconvert:DescribeEndpoints
             Resource:
               - "*"
           - Effect: Allow
@@ -280,11 +290,11 @@ Resources:
               - logs:CreateLogStream
               - logs:PutLogEvents
             Resource:
-              - arn:aws:logs:*:*:*:*
+              - !Sub "arn:aws:logs::${AWS::AccountId}:*:*:*"
           - Effect: Allow
             Action:
               - dynamodb:Query
-              - dynamodb:PutItem              
+              - dynamodb:PutItem
             Resource:
               - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
               - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
@@ -292,7 +302,8 @@ Resources:
             Action:
               - sns:Publish
             Resource:
-              - !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"
+              - !Ref VideoAnalysisTopic
+              - !Ref EmailTopic
   GetAnalysisFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -351,7 +362,7 @@ Resources:
               - logs:CreateLogStream
               - logs:PutLogEvents
             Resource:
-              - arn:aws:logs:*:*:*:*
+              - !Sub "arn:aws:logs::${AWS::AccountId}:*:*:*"
           - Effect: Allow
             Action:
               - dynamodb:Query
@@ -369,7 +380,7 @@ Resources:
             Action:
               - sns:Publish
             Resource:
-              - !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"
+              - !Ref EmailTopic
   BrandFromTextAnalysis:
     Type: AWS::Serverless::Function
     Properties:
@@ -407,7 +418,7 @@ Resources:
               - logs:CreateLogStream
               - logs:PutLogEvents
             Resource:
-              - arn:aws:logs:*:*:*:*
+              - !Sub "arn:aws:logs::${AWS::AccountId}:*:*:*"
           - Effect: Allow
             Action:
               - dynamodb:PutItem
@@ -424,7 +435,7 @@ Resources:
             Action:
               - sns:Publish
             Resource:
-              - !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"
+              - !Ref EmailTopic
   BrandFromLogoAnalysis:
     Type: AWS::Serverless::Function
     Properties:
@@ -461,7 +472,7 @@ Resources:
               - logs:CreateLogStream
               - logs:PutLogEvents
             Resource:
-              - arn:aws:logs:*:*:*:*
+              - !Sub "arn:aws:logs::${AWS::AccountId}:*:*:*"
           - Effect: Allow
             Action:
               - dynamodb:PutItem
@@ -479,7 +490,7 @@ Resources:
             Action:
               - sns:Publish
             Resource:
-              - !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"
+              - !Ref EmailTopic
   CelebritiesFromFramesAnalysis:
     Type: AWS::Serverless::Function
     Properties:
@@ -520,7 +531,7 @@ Resources:
               - logs:CreateLogStream
               - logs:PutLogEvents
             Resource:
-              - arn:aws:logs:*:*:*:*
+              - !Sub "arn:aws:logs::${AWS::AccountId}:*:*:*"
           - Effect: Allow
             Action:
               - dynamodb:Query
@@ -538,7 +549,7 @@ Resources:
             Action:
               - sns:Publish
             Resource:
-              - !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"
+              - !Ref EmailTopic
   ######################
   # Lambda Permissions #
   ######################
@@ -617,7 +628,7 @@ Resources:
       TopicName: "VidAnalysisTopic"
   oscSub:
     Type: AWS::SNS::Subscription
-    Properties: 
+    Properties:
       Endpoint: !GetAtt SceneClassification.Arn
       Protocol: lambda
       FilterPolicy: '{"analysis": ["all", "osc"]}'
@@ -690,6 +701,11 @@ Resources:
               job_id: "$.detail.jobId"
             InputTemplate: |
               "job_id:<job_id>"
+  RestAPIAccessLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 7
+      LogGroupName: "RestAPIAccessLog"
   #####################
   #  DynamoDB Table   #
   #####################
@@ -725,7 +741,6 @@ Resources:
         PointInTimeRecoveryEnabled: true
       SSESpecification:
         SSEEnabled: true
-
       Tags:
         - Key: cost
           Value: aws-ee
