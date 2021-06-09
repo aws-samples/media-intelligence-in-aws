@@ -4,7 +4,7 @@ This repository defines the resources and instructions to deploy a _CloudFormati
 
 The stack will deploy the following architecture:
 
-![Architecture](./architecture.jpg)
+![Architecture](./architecture.png)
 
 ## Description
 
