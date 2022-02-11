@@ -1,4 +1,4 @@
-# Globo Digital Product Placement
+# Media Intelligence Analysis
 
 This repository defines the resources and instructions to deploy a _CloudFormation Stack_ on an AWS Account. 
 
@@ -82,7 +82,7 @@ This command will prompt you with a set of parameters, please fill them accordin
 | DestinationBucket | The name of the second bucket you created previously | OUTPUT_BUCKET |
 | ESDomainName | A unique domain name for the ElasticSearch cluster | my-unique-es-cluster | 
 | CognitoDomainName | A unique domain name for the Cognito User Pool | my-unique-cog-cluster |
-| DynamoDBTable | A name for the Dynamodb table | globo-jobs |
+| DynamoDBTable | A name for the Dynamodb table | aprendiendoaws-ml-mi-jobs |
 | CelebrityCollectionID | The Id for the face collection you've created previously | bra-celebs |
 | StageName | A name for the stage that will be deployed on API Gateway | Prod |
 | OSCDictionary | KEEP DEFAULT | osc_files/dictionary.json |
@@ -90,7 +90,7 @@ This command will prompt you with a set of parameters, please fill them accordin
 
 After filling the values accordingly, use the default configurations until the template starts deploying.
 
-You can visit the _CloudFormation_ tab in the AWS Console to verify the resources created. To do so, click on the __globo__ stack and select the __Resources__ tab.
+You can visit the _CloudFormation_ tab in the AWS Console to verify the resources created. To do so, click on the __aprendiendoaws-ml-mi__ stack and select the __Resources__ tab.
 
 ## Testing
 
@@ -146,7 +146,7 @@ Finally, you can search your analysis results using the `/analysis/search` endpo
 
 ## Team
 
-This prototype developed by the AWS Envision Engineering Team. For questions or corncerns please reach out to:
+This prototype developed by the AWS Envision Engineering Team. For questions or concerns please reach out to:
 
 - __Tech Lead__: [Pedro Pimentel](mailto:pppimen@amazon.com)
 - __EE Engineer__: [Arturo Minor](mailto:arbahena@amazon.com)

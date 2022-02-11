@@ -1,44 +1,38 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  Globo DPP backend SAM Template
+  Media Inteligence Processor backend SAM Template
 
 Parameters:
   Email:
     Type: String
     Description: Email to notify when fail occurs
-    Default: "arbahena@amazon.com"
+    Default: "email@domain.com"
   S3Bucket:
     Type: String
     Description: Your Amazon S3 bucket name
-    Default: "globo-data-copy"
+    Default: "aprendiendoaws-ml-mi"
   DestinationBucket:
     Type: String
     Description: Amazon S3 bucket to bulk frames and audio outputs
-    Default: "globo-dev"
+    Default: "results"
   ESDomainName:
     Type: String
     Description: Amazon ElasticSearch Domain name
-    Default: 'globo-dpp-es-domain'
+    Default: 'aprendiendoaws-ml-mi-domain'
   CognitoDomainName:
     Type: String
     Description: Amazon Cognito Domain name (Has to be unique)
-    Default: 'globo-dpp-es-kibana'
+    Default: 'aprendiendoaws-ml-mi-kibana'
   DynamoDBTable:
     Type: String
-    Default: 'globo-jobs'
-  CelebrityCollectionID:
-    Type: String
-    Default: 'bra-celebs'
+    Default: 'aprendiendoaws-ml-mi-jobs'
   StageName:
     Type: String
     Default: 'Prod'
   OSCDictionary:
     Type: String
     Default: 'osc_files/dictionary.json'
-  ModelVersionArn:
-    Type: String
-    Default: 'arn:aws:rekognition:us-east-1:728516303426:project/globo-brands-cl/version/globo-brands-cl.2021-04-20T09.07.16/1618920437011'
 
 Globals:
   Function:
@@ -436,120 +430,6 @@ Resources:
               - sns:Publish
             Resource:
               - !Ref EmailTopic
-  BrandFromLogoAnalysis:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: analysis/brand_from_logo/
-      Handler: bfl.lambda_handler
-      Environment:
-        Variables:
-          DDB_TABLE: !Ref DynamoDBTable
-          IN_S3_BUCKET: !Ref S3Bucket
-          DEST_S3_BUCKET: !Ref DestinationBucket
-          CONFIDENCE_THRESHOLD: 50.0
-          ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
-          SNS_EMAIL_TOPIC: !Ref EmailTopic
-          MODEL_ARN: !Ref ModelVersionArn
-      Policies:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
-        - Statement:
-          - Effect: Allow
-            Action:
-              - rekognition:DetectCustomLabels
-            Resource:
-              - "*"
-          - Effect: Allow
-            Action:
-              - s3:GetObject
-              - s3:PutObject
-            Resource:
-              - !Sub "arn:aws:s3:::${S3Bucket}/*"
-              - !Sub "arn:aws:s3:::${DestinationBucket}/*"
-          - Effect: Allow
-            Action:
-              - logs:CreateLogGroup
-              - logs:CreateLogStream
-              - logs:PutLogEvents
-            Resource:
-              - !Sub "arn:aws:logs::${AWS::AccountId}:*:*:*"
-          - Effect: Allow
-            Action:
-              - dynamodb:PutItem
-              - dynamodb:Query
-              - dynamodb:BatchWriteItem
-            Resource:
-              - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
-              - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
-          - Effect: Allow
-            Action:
-              - lambda:InvokeFunction
-            Resource:
-              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*"
-          - Effect: Allow
-            Action:
-              - sns:Publish
-            Resource:
-              - !Ref EmailTopic
-  CelebritiesFromFramesAnalysis:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: analysis/celebrity_from_frames/
-      Handler: cff.lambda_handler
-      Environment:
-        Variables:
-          DDB_TABLE: !Ref ResultsTable
-          IN_S3_BUCKET: !Ref S3Bucket
-          DEST_S3_BUCKET: !Ref DestinationBucket
-          CELEBRITY_COLLECTION_ID: !Ref CelebrityCollectionID
-          ES_LAMBDA_ARN: !GetAtt ESLambda.Arn
-          SNS_EMAIL_TOPIC: !Ref EmailTopic
-      Policies:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
-        - Statement:
-          - Effect: Allow
-            Action:
-              - rekognition:DetectFaces
-              - rekognition:IndexFaces
-              - rekognition:SearchFaces
-              - rekognition:StartFaceSearch
-              - rekognition:SearchFacesByImage
-              - rekognition:GetFaceSearch
-            Resource:
-              - "*"
-          - Effect: Allow
-            Action:
-              - s3:GetObject
-              - s3:PutObject
-            Resource:
-              - !Sub "arn:aws:s3:::${S3Bucket}/*"
-              - !Sub "arn:aws:s3:::${DestinationBucket}/*"
-          - Effect: Allow
-            Action:
-              - logs:CreateLogGroup
-              - logs:CreateLogStream
-              - logs:PutLogEvents
-            Resource:
-              - !Sub "arn:aws:logs::${AWS::AccountId}:*:*:*"
-          - Effect: Allow
-            Action:
-              - dynamodb:Query
-              - dynamodb:PutItem
-              - dynamodb:BatchWriteItem
-            Resource:
-              - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}"
-              - !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTable}/*"
-          - Effect: Allow
-            Action:
-              - lambda:InvokeFunction
-            Resource:
-              - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*"
-          - Effect: Allow
-            Action:
-              - sns:Publish
-            Resource:
-              - !Ref EmailTopic
   ######################
   # Lambda Permissions #
   ######################
@@ -574,20 +454,6 @@ Resources:
       Principal: "sns.amazonaws.com"
       SourceArn: !Ref VideoAnalysisTopic
       FunctionName: !GetAtt BrandFromTextAnalysis.Arn
-  CelebritiesFromFramesLambdaInvokePermissions:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: "lambda:InvokeFunction"
-      Principal: "sns.amazonaws.com"
-      SourceArn: !Ref VideoAnalysisTopic
-      FunctionName: !GetAtt CelebritiesFromFramesAnalysis.Arn
-  BrandsFromLogoLambdaInvokePermissions:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: "lambda:InvokeFunction"
-      Principal: "sns.amazonaws.com"
-      SourceArn: !Ref VideoAnalysisTopic
-      FunctionName: !GetAtt BrandFromLogoAnalysis.Arn
   #################
   # ElasticSearch #
   #################
@@ -639,20 +505,6 @@ Resources:
       Endpoint: !GetAtt BrandFromTextAnalysis.Arn
       Protocol: lambda
       FilterPolicy: '{"analysis": ["all", "bft"]}'
-      TopicArn: !Ref VideoAnalysisTopic
-  cffSub:
-    Type: AWS::SNS::Subscription
-    Properties:
-      Endpoint: !GetAtt CelebritiesFromFramesAnalysis.Arn
-      Protocol: lambda
-      FilterPolicy: '{"analysis":["all","cff"]}'
-      TopicArn: !Ref VideoAnalysisTopic
-  bflSub:
-    Type: AWS::SNS::Subscription
-    Properties:
-      Endpoint: !GetAtt BrandFromLogoAnalysis.Arn
-      Protocol: lambda
-      FilterPolicy: '{"analysis":["all","bfl"]}'
       TopicArn: !Ref VideoAnalysisTopic
   EmailTopic:
     Type: AWS::SNS::Topic
