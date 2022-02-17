@@ -71,6 +71,13 @@ def lambda_handler(event, context):
 
     objects, scenes, sentiments = split_objects_scenes(LABELS_DETECTED)
 
+    print(" Object & Scene Classification ready for S3Key: " + s3_key +
+        " and JobId: " + JobId + "\n Completed labeled frames: " +
+        str(len(LABELS_DETECTED)) + "\n No labels in frames: " +
+        str(len(NO_LABELS)) + "\n Failed frames : " + str(len(FAILED_FRAMES)))
+    print(objects)
+    print(scenes)
+    print(sentiments)
     index_objects = invoke_elasticsearch_index_lambda(
         objects, 'objects', message
     )
@@ -263,7 +270,12 @@ def get_object_scene_labels(
                 'FrameS3Key':
                     frame
             }
-            batch.put_item(Item=individual_results)
+            to_dynamo = batch.put_item(Item=individual_results)
+            if to_dynamo is False:
+                print("Failed writing to dynamo")
+            else:
+                print("Item writen to DynamoDB")
+                print(to_dynamo)
             unique_labels = unique_labels_in_image(job_response['Labels'])
             for label, data in unique_labels.items():
                 objects_scene_in_frame.append(
@@ -274,6 +286,7 @@ def get_object_scene_labels(
                 )
             return {timestamp: objects_scene_in_frame}
         else:
+            print('no results for frame' + frame)
             NO_LABELS.append(frame)
             return False
 
@@ -294,7 +307,6 @@ def split_objects_scenes(labels):
             scene_dictionary_obj['Body'].read().decode('UTF-8')
         )
 
-    print(scene_dictionary)
 
     for item in labels:
         item_scene_labels = []

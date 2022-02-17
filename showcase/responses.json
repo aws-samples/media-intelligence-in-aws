@@ -1,0 +1,121 @@
+{
+    "msg": "Query response for item  S3Key: NV_9.mp4 JobId: 1644906267805-svhurt SampleRate: 3 AnalysisPerformed: ['bst', 'osc']",
+    "data": {
+        "osc": [
+            {
+                "S3Key": "NV_9.mp4",
+                "AttrType": "ana/osc/3/0",
+                "FrameS3Key": "videos/analysis/NV_9.mp4/3/1644906267.6932955/NV_9_frame_.0000000.jpg",
+                "JobId": "1644906267805-svhurt",
+                "DetectedLabels": "[{\"Name\": \"Person\", \"Confidence\": 98.31981658935547, \"Instances\": [{\"BoundingBox\": {\"Width\": 0.39597147703170776, \"Height\": 0.9169009923934937, \"Left\": 0.36009693145751953, \"Top\": 0.06768379360437393}, \"Confidence\": 96.91976165771484}], \"Parents\": []}, {\"Name\": \"Human\", \"Confidence\": 98.31981658935547, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Archery\", \"Confidence\": 96.04463958740234, \"Instances\": [], \"Parents\": [{\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}, {\"Name\": \"Person\"}]}, {\"Name\": \"Bow\", \"Confidence\": 96.04463958740234, \"Instances\": [{\"BoundingBox\": {\"Width\": 0.5468664169311523, \"Height\": 0.8316449522972107, \"Left\": 0.17682795226573944, \"Top\": 0.15953733026981354}, \"Confidence\": 65.86373901367188}], \"Parents\": []}, {\"Name\": \"Sport\", \"Confidence\": 96.04463958740234, \"Instances\": [], \"Parents\": [{\"Name\": \"Person\"}]}, {\"Name\": \"Sports\", \"Confidence\": 96.04463958740234, \"Instances\": [], \"Parents\": [{\"Name\": \"Person\"}]}, {\"Name\": \"Archer\", \"Confidence\": 93.1900634765625, \"Instances\": [], \"Parents\": [{\"Name\": \"Archery\"}, {\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}, {\"Name\": \"Person\"}]}]"
+            },
+            {
+                "S3Key": "NV_9.mp4",
+                "AttrType": "ana/osc/3/1000",
+                "FrameS3Key": "videos/analysis/NV_9.mp4/3/1644906267.6932955/NV_9_frame_.0000003.jpg",
+                "JobId": "1644906267805-svhurt",
+                "DetectedLabels": "[{\"Name\": \"Person\", \"Confidence\": 98.0391616821289, \"Instances\": [{\"BoundingBox\": {\"Width\": 0.40185993909835815, \"Height\": 0.9211644530296326, \"Left\": 0.35678187012672424, \"Top\": 0.0651421844959259}, \"Confidence\": 97.1087417602539}], \"Parents\": []}, {\"Name\": \"Human\", \"Confidence\": 98.0391616821289, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Archery\", \"Confidence\": 96.3555679321289, \"Instances\": [], \"Parents\": [{\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}, {\"Name\": \"Person\"}]}, {\"Name\": \"Bow\", \"Confidence\": 96.3555679321289, \"Instances\": [{\"BoundingBox\": {\"Width\": 0.6124483942985535, \"Height\": 0.8924994468688965, \"Left\": 0.11280818283557892, \"Top\": 0.10582941025495529}, \"Confidence\": 78.05088806152344}], \"Parents\": []}, {\"Name\": \"Sport\", \"Confidence\": 96.3555679321289, \"Instances\": [], \"Parents\": [{\"Name\": \"Person\"}]}, {\"Name\": \"Sports\", \"Confidence\": 96.3555679321289, \"Instances\": [], \"Parents\": [{\"Name\": \"Person\"}]}, {\"Name\": \"Archer\", \"Confidence\": 93.37378692626953, \"Instances\": [], \"Parents\": [{\"Name\": \"Archery\"}, {\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}, {\"Name\": \"Person\"}]}]"
+            },
+            {
+                "S3Key": "NV_9.mp4",
+                "AttrType": "ana/osc/3/1333",
+                "FrameS3Key": "videos/analysis/NV_9.mp4/3/1644906267.6932955/NV_9_frame_.0000004.jpg",
+                "JobId": "1644906267805-svhurt",
+                "DetectedLabels": "[{\"Name\": \"Person\", \"Confidence\": 98.2040023803711, \"Instances\": [{\"BoundingBox\": {\"Width\": 0.37463006377220154, \"Height\": 0.9123689532279968, \"Left\": 0.3771039545536041, \"Top\": 0.07043609768152237}, \"Confidence\": 96.92860412597656}], \"Parents\": []}, {\"Name\": \"Human\", \"Confidence\": 98.2040023803711, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Archery\", \"Confidence\": 96.86727142333984, \"Instances\": [], \"Parents\": [{\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}, {\"Name\": \"Person\"}]}, {\"Name\": \"Bow\", \"Confidence\": 96.86727142333984, \"Instances\": [{\"BoundingBox\": {\"Width\": 0.6041268110275269, \"Height\": 0.9108452796936035, \"Left\": 0.12150971591472626, \"Top\": 0.08776579797267914}, \"Confidence\": 78.09416961669922}], \"Parents\": []}, {\"Name\": \"Sport\", \"Confidence\": 96.86727142333984, \"Instances\": [], \"Parents\": [{\"Name\": \"Person\"}]}, {\"Name\": \"Sports\", \"Confidence\": 96.86727142333984, \"Instances\": [], \"Parents\": [{\"Name\": \"Person\"}]}, {\"Name\": \"Archer\", \"Confidence\": 95.79380798339844, \"Instances\": [], \"Parents\": [{\"Name\": \"Archery\"}, {\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}, {\"Name\": \"Person\"}]}]"
+            },
+            {
+                "S3Key": "NV_9.mp4",
+                "AttrType": "ana/osc/3/1666",
+                "FrameS3Key": "videos/analysis/NV_9.mp4/3/1644906267.6932955/NV_9_frame_.0000005.jpg",
+                "JobId": "1644906267805-svhurt",
+                "DetectedLabels": "[{\"Name\": \"Person\", \"Confidence\": 98.34349822998047, \"Instances\": [{\"BoundingBox\": {\"Width\": 0.3924656808376312, \"Height\": 0.9170988202095032, \"Left\": 0.36311808228492737, \"Top\": 0.06653497368097305}, \"Confidence\": 97.32140350341797}], \"Parents\": []}, {\"Name\": \"Human\", \"Confidence\": 98.34349822998047, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Archery\", \"Confidence\": 96.08965301513672, \"Instances\": [], \"Parents\": [{\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}, {\"Name\": \"Person\"}]}, {\"Name\": \"Bow\", \"Confidence\": 96.08965301513672, \"Instances\": [{\"BoundingBox\": {\"Width\": 0.610772967338562, \"Height\": 0.8183850049972534, \"Left\": 0.11781575530767441, \"Top\": 0.1544586569070816}, \"Confidence\": 84.93354034423828}], \"Parents\": []}, {\"Name\": \"Sport\", \"Confidence\": 96.08965301513672, \"Instances\": [], \"Parents\": [{\"Name\": \"Person\"}]}, {\"Name\": \"Sports\", \"Confidence\": 96.08965301513672, \"Instances\": [], \"Parents\": [{\"Name\": \"Person\"}]}, {\"Name\": \"Archer\", \"Confidence\": 93.91858673095703, \"Instances\": [], \"Parents\": [{\"Name\": \"Archery\"}, {\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}, {\"Name\": \"Person\"}]}]"
+            },
+            {
+                "S3Key": "NV_9.mp4",
+                "AttrType": "ana/osc/3/2000",
+                "FrameS3Key": "videos/analysis/NV_9.mp4/3/1644906267.6932955/NV_9_frame_.0000006.jpg",
+                "JobId": "1644906267805-svhurt",
+                "DetectedLabels": "[{\"Name\": \"Person\", \"Confidence\": 98.54441833496094, \"Instances\": [{\"BoundingBox\": {\"Width\": 0.3849329352378845, \"Height\": 0.9130036234855652, \"Left\": 0.3669019341468811, \"Top\": 0.07106272131204605}, \"Confidence\": 97.6201171875}], \"Parents\": []}, {\"Name\": \"Human\", \"Confidence\": 98.54441833496094, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Archery\", \"Confidence\": 96.62630462646484, \"Instances\": [], \"Parents\": [{\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}, {\"Name\": \"Person\"}]}, {\"Name\": \"Bow\", \"Confidence\": 96.62630462646484, \"Instances\": [{\"BoundingBox\": {\"Width\": 0.6149789094924927, \"Height\": 0.8956210613250732, \"Left\": 0.11257262527942657, \"Top\": 0.10268982499837875}, \"Confidence\": 83.73419952392578}], \"Parents\": []}, {\"Name\": \"Sport\", \"Confidence\": 96.62630462646484, \"Instances\": [], \"Parents\": [{\"Name\": \"Person\"}]}, {\"Name\": \"Sports\", \"Confidence\": 96.62630462646484, \"Instances\": [], \"Parents\": [{\"Name\": \"Person\"}]}, {\"Name\": \"Archer\", \"Confidence\": 95.3927001953125, \"Instances\": [], \"Parents\": [{\"Name\": \"Archery\"}, {\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}, {\"Name\": \"Person\"}]}]"
+            },
+            {
+                "S3Key": "NV_9.mp4",
+                "AttrType": "ana/osc/3/2333",
+                "FrameS3Key": "videos/analysis/NV_9.mp4/3/1644906267.6932955/NV_9_frame_.0000007.jpg",
+                "JobId": "1644906267805-svhurt",
+                "DetectedLabels": "[{\"Name\": \"Person\", \"Confidence\": 98.10466003417969, \"Instances\": [{\"BoundingBox\": {\"Width\": 0.3887736201286316, \"Height\": 0.9185165166854858, \"Left\": 0.3679731786251068, \"Top\": 0.06254738569259644}, \"Confidence\": 97.15142059326172}], \"Parents\": []}, {\"Name\": \"Human\", \"Confidence\": 98.10466003417969, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Archery\", \"Confidence\": 94.63306427001953, \"Instances\": [], \"Parents\": [{\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}, {\"Name\": \"Person\"}]}, {\"Name\": \"Bow\", \"Confidence\": 94.63306427001953, \"Instances\": [{\"BoundingBox\": {\"Width\": 0.5498406291007996, \"Height\": 0.7893354892730713, \"Left\": 0.17286396026611328, \"Top\": 0.2003537118434906}, \"Confidence\": 81.60192108154297}], \"Parents\": []}, {\"Name\": \"Sport\", \"Confidence\": 94.63306427001953, \"Instances\": [], \"Parents\": [{\"Name\": \"Person\"}]}, {\"Name\": \"Sports\", \"Confidence\": 94.63306427001953, \"Instances\": [], \"Parents\": [{\"Name\": \"Person\"}]}, {\"Name\": \"Archer\", \"Confidence\": 88.97854614257812, \"Instances\": [], \"Parents\": [{\"Name\": \"Archery\"}, {\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}, {\"Name\": \"Person\"}]}]"
+            },
+            {
+                "S3Key": "NV_9.mp4",
+                "AttrType": "ana/osc/3/2666",
+                "FrameS3Key": "videos/analysis/NV_9.mp4/3/1644906267.6932955/NV_9_frame_.0000008.jpg",
+                "JobId": "1644906267805-svhurt",
+                "DetectedLabels": "[{\"Name\": \"Archer\", \"Confidence\": 99.42044830322266, \"Instances\": [], \"Parents\": [{\"Name\": \"Archery\"}, {\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}, {\"Name\": \"Person\"}]}, {\"Name\": \"Person\", \"Confidence\": 99.42044830322266, \"Instances\": [{\"BoundingBox\": {\"Width\": 0.35996466875076294, \"Height\": 0.9335166215896606, \"Left\": 0.3867368698120117, \"Top\": 0.06013315171003342}, \"Confidence\": 97.55340576171875}], \"Parents\": []}, {\"Name\": \"Archery\", \"Confidence\": 99.42044830322266, \"Instances\": [], \"Parents\": [{\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}, {\"Name\": \"Person\"}]}, {\"Name\": \"Bow\", \"Confidence\": 99.42044830322266, \"Instances\": [{\"BoundingBox\": {\"Width\": 0.5369022488594055, \"Height\": 0.7944214940071106, \"Left\": 0.17162950336933136, \"Top\": 0.2000073790550232}, \"Confidence\": 79.44586944580078}], \"Parents\": []}, {\"Name\": \"Sport\", \"Confidence\": 99.42044830322266, \"Instances\": [], \"Parents\": [{\"Name\": \"Person\"}]}, {\"Name\": \"Human\", \"Confidence\": 99.42044830322266, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Sports\", \"Confidence\": 99.42044830322266, \"Instances\": [], \"Parents\": [{\"Name\": \"Person\"}]}]"
+            },
+            {
+                "S3Key": "NV_9.mp4",
+                "AttrType": "ana/osc/3/3000",
+                "FrameS3Key": "videos/analysis/NV_9.mp4/3/1644906267.6932955/NV_9_frame_.0000009.jpg",
+                "JobId": "1644906267805-svhurt",
+                "DetectedLabels": "[{\"Name\": \"Person\", \"Confidence\": 99.20088195800781, \"Instances\": [{\"BoundingBox\": {\"Width\": 0.33592748641967773, \"Height\": 0.92331862449646, \"Left\": 0.40611714124679565, \"Top\": 0.07529250532388687}, \"Confidence\": 99.20088195800781}], \"Parents\": []}, {\"Name\": \"Human\", \"Confidence\": 99.20088195800781, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Archer\", \"Confidence\": 97.80387115478516, \"Instances\": [], \"Parents\": [{\"Name\": \"Archery\"}, {\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}, {\"Name\": \"Person\"}]}, {\"Name\": \"Archery\", \"Confidence\": 97.80387115478516, \"Instances\": [], \"Parents\": [{\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}, {\"Name\": \"Person\"}]}, {\"Name\": \"Bow\", \"Confidence\": 97.80387115478516, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Sport\", \"Confidence\": 97.80387115478516, \"Instances\": [], \"Parents\": [{\"Name\": \"Person\"}]}, {\"Name\": \"Sports\", \"Confidence\": 97.80387115478516, \"Instances\": [], \"Parents\": [{\"Name\": \"Person\"}]}]"
+            },
+            {
+                "S3Key": "NV_9.mp4",
+                "AttrType": "ana/osc/3/333",
+                "FrameS3Key": "videos/analysis/NV_9.mp4/3/1644906267.6932955/NV_9_frame_.0000001.jpg",
+                "JobId": "1644906267805-svhurt",
+                "DetectedLabels": "[{\"Name\": \"Person\", \"Confidence\": 98.17578125, \"Instances\": [{\"BoundingBox\": {\"Width\": 0.3806190490722656, \"Height\": 0.9171081781387329, \"Left\": 0.375068724155426, \"Top\": 0.06799396872520447}, \"Confidence\": 96.45823669433594}], \"Parents\": []}, {\"Name\": \"Human\", \"Confidence\": 98.17578125, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Archery\", \"Confidence\": 96.01869201660156, \"Instances\": [], \"Parents\": [{\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}, {\"Name\": \"Person\"}]}, {\"Name\": \"Bow\", \"Confidence\": 96.01869201660156, \"Instances\": [{\"BoundingBox\": {\"Width\": 0.5652580261230469, \"Height\": 0.8399232625961304, \"Left\": 0.16485893726348877, \"Top\": 0.15428869426250458}, \"Confidence\": 62.07191467285156}], \"Parents\": []}, {\"Name\": \"Sport\", \"Confidence\": 96.01869201660156, \"Instances\": [], \"Parents\": [{\"Name\": \"Person\"}]}, {\"Name\": \"Sports\", \"Confidence\": 96.01869201660156, \"Instances\": [], \"Parents\": [{\"Name\": \"Person\"}]}, {\"Name\": \"Archer\", \"Confidence\": 92.01231384277344, \"Instances\": [], \"Parents\": [{\"Name\": \"Archery\"}, {\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}, {\"Name\": \"Person\"}]}]"
+            },
+            {
+                "S3Key": "NV_9.mp4",
+                "AttrType": "ana/osc/3/3333",
+                "FrameS3Key": "videos/analysis/NV_9.mp4/3/1644906267.6932955/NV_9_frame_.0000010.jpg",
+                "JobId": "1644906267805-svhurt",
+                "DetectedLabels": "[{\"Name\": \"Shooting Range\", \"Confidence\": 91.24459838867188, \"Instances\": [], \"Parents\": []}]"
+            },
+            {
+                "S3Key": "NV_9.mp4",
+                "AttrType": "ana/osc/3/3666",
+                "FrameS3Key": "videos/analysis/NV_9.mp4/3/1644906267.6932955/NV_9_frame_.0000011.jpg",
+                "JobId": "1644906267805-svhurt",
+                "DetectedLabels": "[{\"Name\": \"Sport\", \"Confidence\": 87.29180145263672, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Sports\", \"Confidence\": 87.29180145263672, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Archery\", \"Confidence\": 86.15328216552734, \"Instances\": [], \"Parents\": [{\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}]}, {\"Name\": \"Bow\", \"Confidence\": 86.15328216552734, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Shooting Range\", \"Confidence\": 77.3318862915039, \"Instances\": [], \"Parents\": []}]"
+            },
+            {
+                "S3Key": "NV_9.mp4",
+                "AttrType": "ana/osc/3/4000",
+                "FrameS3Key": "videos/analysis/NV_9.mp4/3/1644906267.6932955/NV_9_frame_.0000012.jpg",
+                "JobId": "1644906267805-svhurt",
+                "DetectedLabels": "[{\"Name\": \"Sport\", \"Confidence\": 86.1256103515625, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Sports\", \"Confidence\": 86.1256103515625, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Archery\", \"Confidence\": 83.92644500732422, \"Instances\": [], \"Parents\": [{\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}]}, {\"Name\": \"Bow\", \"Confidence\": 83.92644500732422, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Shooting Range\", \"Confidence\": 72.44377136230469, \"Instances\": [], \"Parents\": []}]"
+            },
+            {
+                "S3Key": "NV_9.mp4",
+                "AttrType": "ana/osc/3/4333",
+                "FrameS3Key": "videos/analysis/NV_9.mp4/3/1644906267.6932955/NV_9_frame_.0000013.jpg",
+                "JobId": "1644906267805-svhurt",
+                "DetectedLabels": "[{\"Name\": \"Archery\", \"Confidence\": 86.69245910644531, \"Instances\": [], \"Parents\": [{\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}]}, {\"Name\": \"Sport\", \"Confidence\": 86.69245910644531, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Bow\", \"Confidence\": 86.69245910644531, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Sports\", \"Confidence\": 86.69245910644531, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Shooting Range\", \"Confidence\": 74.3573226928711, \"Instances\": [], \"Parents\": []}]"
+            },
+            {
+                "S3Key": "NV_9.mp4",
+                "AttrType": "ana/osc/3/4666",
+                "FrameS3Key": "videos/analysis/NV_9.mp4/3/1644906267.6932955/NV_9_frame_.0000014.jpg",
+                "JobId": "1644906267805-svhurt",
+                "DetectedLabels": "[{\"Name\": \"Sport\", \"Confidence\": 87.20625305175781, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Sports\", \"Confidence\": 87.20625305175781, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Archery\", \"Confidence\": 87.0802993774414, \"Instances\": [], \"Parents\": [{\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}]}, {\"Name\": \"Bow\", \"Confidence\": 87.0802993774414, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Shooting Range\", \"Confidence\": 73.64409637451172, \"Instances\": [], \"Parents\": []}]"
+            },
+            {
+                "S3Key": "NV_9.mp4",
+                "AttrType": "ana/osc/3/666",
+                "FrameS3Key": "videos/analysis/NV_9.mp4/3/1644906267.6932955/NV_9_frame_.0000002.jpg",
+                "JobId": "1644906267805-svhurt",
+                "DetectedLabels": "[{\"Name\": \"Person\", \"Confidence\": 98.19122314453125, \"Instances\": [{\"BoundingBox\": {\"Width\": 0.36547422409057617, \"Height\": 0.9166020750999451, \"Left\": 0.3892057538032532, \"Top\": 0.06946322321891785}, \"Confidence\": 97.3813247680664}], \"Parents\": []}, {\"Name\": \"Human\", \"Confidence\": 98.19122314453125, \"Instances\": [], \"Parents\": []}, {\"Name\": \"Archery\", \"Confidence\": 95.83245849609375, \"Instances\": [], \"Parents\": [{\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}, {\"Name\": \"Person\"}]}, {\"Name\": \"Bow\", \"Confidence\": 95.83245849609375, \"Instances\": [{\"BoundingBox\": {\"Width\": 0.6220846176147461, \"Height\": 0.904114305973053, \"Left\": 0.10503170639276505, \"Top\": 0.09449683129787445}, \"Confidence\": 53.81139373779297}], \"Parents\": []}, {\"Name\": \"Sport\", \"Confidence\": 95.83245849609375, \"Instances\": [], \"Parents\": [{\"Name\": \"Person\"}]}, {\"Name\": \"Sports\", \"Confidence\": 95.83245849609375, \"Instances\": [], \"Parents\": [{\"Name\": \"Person\"}]}, {\"Name\": \"Archer\", \"Confidence\": 93.00165557861328, \"Instances\": [], \"Parents\": [{\"Name\": \"Archery\"}, {\"Name\": \"Sport\"}, {\"Name\": \"Bow\"}, {\"Name\": \"Person\"}]}]"
+            }
+        ],
+        "dynamo_record": {
+            "S3Key": "NV_9.mp4",
+            "JobId": "1644906267805-svhurt",
+            "SampleRate": "3",
+            "AnalysisPerformed": [
+                "bst",
+                "osc"
+            ]
+        }
+    }
+}

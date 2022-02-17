@@ -1,0 +1,46 @@
+.h1,.h2,.h3,.h4,.h5,.h6,h1,h2,h3,h4,h5,h6{
+  color: #f8f9fa;
+}
+
+.column-video {
+  padding-right: 0 !important;
+}
+
+.column-slots {
+  flex: 0 0 500px;
+}
+
+.slot-card {
+  border: 1px solid #b1b3b5 !important;
+  background-color:#1d2124;
+}
+
+.slot-card:hover {
+  background-color: #343a40;
+  cursor: pointer;
+}
+
+.slot-card-selected {
+  border-color: #4285f4 !important;
+  background-color: #343a40;
+}
+
+.slot-card-img {
+  filter: grayscale(1);
+}
+
+.slot-card-img-selected {
+  filter: grayscale(0) !important;
+}
+
+.aws-logo {
+  max-height: 30px;
+}
+
+.checked-marker {
+  background-color: red !important;
+}
+
+.unchecked-marker {
+  background-color: black !important;
+}

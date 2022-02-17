@@ -9,13 +9,13 @@ The stack will deploy the following architecture:
 ## Description
 
 The application deploys a REST API with the following endpoints:
-- `analysis/start-analysis`: Starts a video analysis with the specified parameters
+- `analysis/start`: Starts a video analysis with the specified parameters
 - `analysis/search`: Searches for a video that maches a set of filters
 - `analysis`: Retrieves the raw analysis results from _DynamoDB_.
 
 The workflow for a video analysis goes as follows:
 1. The user uploads a video to a pre-determined S3 Bucket
-2. The user calls the __/start-analysis__ endpoint, starting the analysis workflow
+2. The user calls the __/analysis/start__ endpoint, starting the analysis workflow
 3. Multiple analysis are performed. The results are saved onto DynamoDB and ElasticSearch
 4. The user searches for a video using one of the provided filters
 5. The user retrieves all the information about an specific video using DynamoDB.
@@ -97,9 +97,9 @@ You can visit the _CloudFormation_ tab in the AWS Console to verify the resource
 You can use one of the videos provided in the `/ads` folder to perform the testing. To do so, upload the desired video to recently created bucket and call `/start-analysis` to start the workflow. You can use the following snippet as an example:
 
 ```json
-// #POST /analysis/start-analysis
+// #POST /analysis/start
 {
-  "S3_Key": "havaianas.mp4",    // Your video file name
+  "S3Key": "havaianas.mp4",    // Your video file name
   "SampleRate": 1,              // The desired sample rate
   "analysis": [                 // The desired analysis
     "bst",
@@ -113,7 +113,7 @@ If successfull, you will receive a response containing the Media Convert Job Id 
 ```json
 // POST /analysis
 {
-  "S3_Key": "havaianas.mp4",   // Your video file name
+  "S3Key": "havaianas.mp4",   // Your video file name
   "JobId": "MyJobId",          // The MediaConvert JobId from the previous step
   "analysis": "bfl"            // [OPTIONAL] Which analysis to retrieve results
 }
@@ -125,21 +125,23 @@ Finally, you can search your analysis results using the `/analysis/search` endpo
 ```json
 // POST /analysis/search
 {
-  "must": [                   // [OPTIONAL] Choose what aspects you want in the video
+  "must":  {                 // [OPTIONAL] Choose what aspects you want in the video
     "scenes": [               // [OPTIONAL] Retrieve videos that these scenes
       {
         "scene": "beach",
         "accuracy": 50.0
       }
     ]
-  ],
-  "avoid": [                  // [OPTIONAL] Chose the aspects that  
-    {                         // you want to avoid in the video
-      "sentiment": "sadness",
-      "accuracy": 89.0
-    }
-  ],
-  "S3_Key": "havaianas.mp4", // [OPTIONAL] Choose a video search the results
+  },
+  "avoid": {
+    "sentiments":[                  // [OPTIONAL] Chose the aspects that  
+        {                         // you want to avoid in the video
+          "sentiment": "sadness",
+          "accuracy": 89.0
+        }
+    ]
+  },
+  "S3Key": "havaianas.mp4", // [OPTIONAL] Choose a video search the results
   "SampleRate": 1            // [OPTIONAL] Choose a sample rate to search the results
 }
 ```
