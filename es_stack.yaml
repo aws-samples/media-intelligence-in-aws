@@ -100,7 +100,7 @@ Resources:
         - openid
         - aws.cognito.signin.user.admin
       CallbackURLs:
-        - https://example.com
+        - https://examples.com
       SupportedIdentityProviders:
         - COGNITO
   lambdaeskibanaCognitoIdentityPool83C5566D:

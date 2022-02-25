@@ -1,3 +1,15 @@
+# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Amazon Software License (the "License"). You may not
+# use this file except in compliance with the License. A copy of the
+# License is located at:
+#    http://aws.amazon.com/asl/
+# or in the "license" file accompanying this file. This file is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, expressi
+# or implied. See the License for the specific language governing permissions
+# and limitations under the License.
+
+
 from matplotlib import pyplot as plt
 from random import randrange
 from json import dumps,loads
@@ -7,7 +19,6 @@ from cv2 import cvtColor,imread,rectangle,COLOR_BGR2RGB
 class BoundingBox:
     def __init__(self,box_color = (255,255,255),box_thickness = 2):
         self.color = box_color
-        self.eyes_color = tuple(int(divmod(int(color)+randrange(256),256)[1]) for color in box_color)
         self.thickness = box_thickness
 
 class RekognitionDisplayer:
@@ -84,14 +95,14 @@ class RekognitionDisplayer:
 
     def add_landmarks_to_image(self,image,landmarks,color=False):
         if color is False:
-            color = self.bounding_box.color
+            color = tuple(int(divmod(int(color)+randrange(256),256)[1]) for color in self.bounding_box.color)
         for values in landmarks:
             top_corner = (values['x'],values['y'])
             bottom_corner = (values['x']+values['width'],values['y']+values['height'])
             rectangle(image,
                 top_corner,
                 bottom_corner,
-                self.bounding_box.color,
+                color,
                 self.bounding_box.thickness)
         return image
 
