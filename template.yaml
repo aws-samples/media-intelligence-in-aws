@@ -492,6 +492,7 @@ Resources:
     Type: AWS::SNS::Topic
     Properties:
       TopicName: "VidAnalysisTopic"
+  #OSC - Object Scene Classification
   oscSub:
     Type: AWS::SNS::Subscription
     Properties:
@@ -499,6 +500,7 @@ Resources:
       Protocol: lambda
       FilterPolicy: '{"analysis": ["all", "osc"]}'
       TopicArn: !Ref VideoAnalysisTopic
+  #BFT - Brand From Text
   bftSub:
     Type: AWS::SNS::Subscription
     Properties:

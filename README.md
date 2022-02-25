@@ -1,4 +1,15 @@
-# Media Intelligence Analysis
+# Media Intelligence Analysis in AWS
+
+Source code for a Media Intelligence Video Analysis solution that can identify specific elements in video content. 
+This layer is the basis for identifying and indexing video analysis elements that in the future can be used for finding specific scenes based on a set of rules. 
+
+As possible ad-ons, customers can use this basis layer for:
+- Ads Slots identification and insertion as in [Smart Ad Breaks.](https://github.com/aws-samples/aws-smart-ad-breaks)
+- Digital Product Placement for branding solutions. 
+- Media content moderation
+- Media content classification    
+
+## Repository Description
 
 This repository defines the resources and instructions to deploy a _CloudFormation Stack_ on an AWS Account. 
 
@@ -6,7 +17,7 @@ The stack will deploy the following architecture:
 
 ![Architecture](./architecture.png)
 
-## Description
+## CloudFormation Template Description
 
 The application deploys a REST API with the following endpoints:
 - `analysis/start`: Starts a video analysis with the specified parameters
@@ -20,7 +31,7 @@ The workflow for a video analysis goes as follows:
 4. The user searches for a video using one of the provided filters
 5. The user retrieves all the information about an specific video using DynamoDB.
 
-## Install
+## 1. Installation
 
 Follow these steps in the order to test this application on your AWS Account:
 
@@ -32,7 +43,7 @@ Please install the following applications on your computer if you haven't alread
 - [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
 
 
-### Creating S3 Bucket(s)
+### 2. Creating Amazon S3 Bucket(s)
 
 For this prototype we assume that you have two S3 Buckets already created. Troughout this guide we will consider the following:
 
@@ -41,25 +52,34 @@ For this prototype we assume that you have two S3 Buckets already created. Troug
 
  Please follow the steps in [this link](https://docs.aws.amazon.com/AmazonS3/latest/userguide/create-bucket-overview.html) and create two S3 bucket if you don't have it already.
 
-### Creating Face Collection on Rekognition
+### 3. Creating a _Face Collection_ on Rekognition [Optional]
 
 In order to use the Celebrity Recognition Model, you will need to [create a Face Collection on Rekognition](https://docs.aws.amazon.com/rekognition/latest/dg/collections.html) and then index some faces to it.
 
-> Inside the folder `/faces` you will encounter the a list of a few celebrities already split. You can use it as a starter and follow the instructions on [this link](https://docs.aws.amazon.com/rekognition/latest/dg/add-faces-to-collection-procedure.html) to index them to your face collection. Feel free to use the INPUT_BUCKET you've created before to upload the face images.
+> You can create the folder `/faces` and generate a list of a few celebrities split by name. You can use it as a starter and follow the instructions on [this link](https://docs.aws.amazon.com/rekognition/latest/dg/add-faces-to-collection-procedure.html) to index them to your face collection. Feel free to use the INPUT_BUCKET you've created before to upload the face images.
 
 Please take note of your face collection Id. We will use it in a next step.
 
-### Training a Custom Labels Model on Rekognition
+### 4. Training a Custom Labels Model on Rekognition [Optional]
 
 In order for the brand detection algorithm to work, you will need to train a model using _Rekognition Custom Labels_. To do so, please follow the following steps:
 1. [Create a Project](https://docs.aws.amazon.com/rekognition/latest/customlabels-dg/cp-create-project.html)
-2. Upload the folder `/brands/samples` to the __INPUT_BUCKET__.
+2. Create a folder with some brand logos in `/brands/samples` and then upload them to the __INPUT_BUCKET__.
 3. [Create a dataset](https://docs.aws.amazon.com/rekognition/latest/customlabels-dg/cd-manifest-files.html) using the files you uploaded to S3. Inside the `/brands` you will find a file called `output.manifest`.mainfest`. Open that file and replace <__S3_BUCKET__> with the id of the __INPUT_BUCKET__ you used on the previous step.
 4. [Train your model](https://docs.aws.amazon.com/rekognition/latest/customlabels-dg/tm-console.html) (This step might take a few minutes to complete.)
 5. [Start your model](https://docs.aws.amazon.com/rekognition/latest/customlabels-dg/rm-run-model.html)
  
+#### Adding steps 3&4 
+If you are willing to implement the __celebrity detection analysis__ as well as the __brand from logo analysis__ you need to create their lambda folders 
+inside the `/analysis` folder and create their main source code, you can use as a basis:
+- [Searching for a face (Image) in a collection](https://docs.aws.amazon.com/rekognition/latest/dg/search-face-with-image-procedure.html#python)
+- [Analysing an Image with Custom Labels](https://docs.aws.amazon.com/rekognition/latest/customlabels-dg/detecting-custom-labels.html)
+Additionally to those intermediate steps, you will also need to update the CloudFormation template by adding those analysis, you can use the current analysis as an example. 
 
-After step 5 is complete, take note of your Model Version Arn. We will need it for the next step.
+[Note] You will need to add these elements in the CloudFormation Template:
+- AWS Lambda Function element
+- AWS Lambda permissions for each analysis
+- Amazon SNS topic subscription for each analysis  
 
 ### 5. Configure & Deploy CloudFormation stack
 
@@ -92,34 +112,40 @@ After filling the values accordingly, use the default configurations until the t
 
 You can visit the _CloudFormation_ tab in the AWS Console to verify the resources created. To do so, click on the __aprendiendoaws-ml-mi__ stack and select the __Resources__ tab.
 
-## Testing
+## API Testing 
 
-You can use one of the videos provided in the `/ads` folder to perform the testing. To do so, upload the desired video to recently created bucket and call `/start-analysis` to start the workflow. You can use the following snippet as an example:
+__Prerequisites__
 
+Before testing the API be sure you have uploaded a video in the _Amazon S3 Input Bucket_ you defined in the CloudFormation parameters.
+You can use one of the videos provided in the `/showcase/examples` folder to perform the testing. To do so, upload the desired video to recently created bucket and call `/start` to start the workflow. You can use the following snippet as an example:
+
+__Start Video Analysis__
+
+Once you have uploaded a video to your Amazon S3 Input Bucket, you must send an HTTPS request to your API with the following body in JSON format:
 ```json
 // #POST /analysis/start
 {
-  "S3Key": "havaianas.mp4",    // Your video file name
+  "S3Key": "GranTourTheTick.mp4",    // Your video file name
   "SampleRate": 1,              // The desired sample rate
   "analysis": [                 // The desired analysis
-    "bst",
-    "bfl"
+    "osc",
+    "bft"
   ]
 }
 ```
-
+__Get Video Analysis Results__
 If successfull, you will receive a response containing the Media Convert Job Id and status. Now you can use the `/analysis` endpoint to retrieve the current analysis for that particular job:
 
 ```json
 // POST /analysis
 {
-  "S3Key": "havaianas.mp4",   // Your video file name
+  "S3Key": "GranTourTheTick.mp4",   // Your video file name
   "JobId": "MyJobId",          // The MediaConvert JobId from the previous step
   "analysis": "bfl"            // [OPTIONAL] Which analysis to retrieve results
 }
 ```
 
-
+__Search Specific Elements in Video Analysis Results__
 Finally, you can search your analysis results using the `/analysis/search` endpoint:
 
 ```json
@@ -128,7 +154,7 @@ Finally, you can search your analysis results using the `/analysis/search` endpo
   "must":  {                 // [OPTIONAL] Choose what aspects you want in the video
     "scenes": [               // [OPTIONAL] Retrieve videos that these scenes
       {
-        "scene": "beach",
+        "scene": "Sports",
         "accuracy": 50.0
       }
     ]
@@ -141,14 +167,14 @@ Finally, you can search your analysis results using the `/analysis/search` endpo
         }
     ]
   },
-  "S3Key": "havaianas.mp4", // [OPTIONAL] Choose a video search the results
+  "S3Key": "GranTourTheTick.mp4", // [OPTIONAL] Choose a video search the results
   "SampleRate": 1            // [OPTIONAL] Choose a sample rate to search the results
 }
 ```
 
-## Team
+## Development Team
 
-This prototype developed by the AWS Envision Engineering Team. For questions or concerns please reach out to:
+This prototype developed by the AWS Envision Engineering Team. For questions, comments, or concerns please reach out to:
 
-- __Tech Lead__: [Pedro Pimentel](mailto:pppimen@amazon.com)
+- __Technical Leader__: [Pedro Pimentel](mailto:pppimen@amazon.com)
 - __EE Engineer__: [Arturo Minor](mailto:arbahena@amazon.com)
