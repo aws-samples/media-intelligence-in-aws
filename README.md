@@ -6,9 +6,16 @@ This layer is the basis for identifying and indexing video analysis elements tha
 As possible ad-ons, customers can use this basis layer for:
 - Ads Slots identification and insertion as in [Smart Ad Breaks.](https://github.com/aws-samples/aws-smart-ad-breaks)
 - Digital Product Placement for branding solutions. 
-- Media content moderation
-- Media content classification    
+- Media content moderation.
+- Media content classification.  
 
+## License Summary
+
+The documentation is made available under the Creative Commons Attribution-ShareAlike 4.0 International License. See the LICENSE file.
+
+The sample code within this documentation is made available under the MIT-0 license. See the LICENSE-SAMPLECODE file.
+
+⚠️ **NOTE:** All packages related to ElasticSearch must be updated to use Amazon OpenSearch Service. You can do it by following these [instructions.](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/version-migration.html)  
 ## Repository Description
 
 This repository defines the resources and instructions to deploy a _CloudFormation Stack_ on an AWS Account. 

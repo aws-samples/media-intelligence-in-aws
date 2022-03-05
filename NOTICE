@@ -1,5 +1,4 @@
-
-Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
 This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
@@ -8,20 +7,7 @@ This product includes software released under MIT LICENSE
 The MIT License (MIT)
 applies to:
 
-- material-ui       Copyright (c) 2014 Call-Em-All
-- axios             Copyright (c) 2014-present Matt Zabriskie
-- sass              Copyright (c) 2013-2016 Andrew Nesbitt
-- bootstrap         Copyright (c) 2011-2022 Twitter, Inc.
-                    Copyright (c) 2011-2022 The Bootstrap Authors
-- bootstrap-icons   Copyright (c) 2019-2021 The Bootstrap Authors
-- js-logger         Copyright (c) 2012 Jonny Reeves, http://jonnyreeves.co.uk/
-- react             Copyright (c) Facebook, Inc. and its affiliates.
-- react-bootstrap   Copyright (c) 2014-present Stephen J. Collings, Matthew Honnibal, Pieter Vanderwerff
-- react-router-dom  Copyright (c) React Training 2015-2019 Copyright (c) Remix Software 2020-2021
-- react-lottie      Copyright (c) 2016 Your Name. <name@emailprovider.io>
-- react-scripts     Copyright (c) 2013-present, Facebook, Inc.
-- typescript        Copyright (c) 2014 Blake Embrey (hello@blakeembrey.com)
-- react-html-parser Copyright (c) 2016-present Peter Newnham
+- requests-aws4auth
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

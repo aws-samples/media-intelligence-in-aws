@@ -1,18 +1,9 @@
-# Copyright 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-#
-# Licensed under the Amazon Software License (the "License"). You may not
-# use this file except in compliance with the License. A copy of the
-# License is located at:
-#    http://aws.amazon.com/asl/
-# or in the "license" file accompanying this file. This file is distributed
-# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, expressi
-# or implied. See the License for the specific language governing permissions
-# and limitations under the License.
-
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: CC-BY-SA-4.0
 
 from matplotlib import pyplot as plt
 from random import randrange
-from json import dumps,loads
+from json import loads
 from math import sqrt,ceil
 from cv2 import cvtColor,imread,rectangle,COLOR_BGR2RGB
 
