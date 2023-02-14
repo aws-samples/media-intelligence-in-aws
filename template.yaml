@@ -1,7 +1,12 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: >
+Description: > (PACE000014/v1/backend)
   Media Inteligence Processor backend SAM Template
+
+Metadata:
+    ID: PACE000014
+    Version: 1
+    Stack: backend
 
 Parameters:
   Email:
